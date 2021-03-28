@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "outDir": "./dist",
+        "rootDir": "./",
+        "strict": true,
+        "esModuleInterop": true,  
+        "skipLibCheck": true, 
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": "src",
+        "experimentalDecorators": true
+    }
+}

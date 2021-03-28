@@ -1,0 +1,30 @@
+{
+  "name": "Web-Sync-Files-Cipher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc --watch",
+    "dev": "nodemon dist/index.js",
+    "build": "tsc",
+    "start": "npm run build && node dist/src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oneCiser/Web-Sync-Files-Cipher.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oneCiser/Web-Sync-Files-Cipher/issues"
+  },
+  "homepage": "https://github.com/oneCiser/Web-Sync-Files-Cipher#readme",
+  "devDependencies": {
+    "@types/node": "^14.14.37",
+    "nodemon": "^2.0.7"
+  },
+  "dependencies": {
+    "typescript": "^4.2.3"
+  }
+}
