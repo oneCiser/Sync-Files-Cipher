@@ -1,25 +1,21 @@
-import  { syncFile } from './src/server/diff'
-import  { compareRolling, createRollingHashs } from './src/utils/rolling'
-import  { getChanges } from './src/client/diff'
-import  { encryptAndSaveFile, decryptFile} from './src/utils/encrypt';
-import fs from 'fs';
+import { syncFile } from "./src/server/diff";
+import { compareRolling, createRollingHashs } from "./src/utils/rolling";
+import { getChanges } from "./src/client/diff";
+import { encryptAndSaveFile, decryptFile } from "./src/utils/encrypt";
+import fs from "fs";
 
-
-const pathBckToCifrados = './tmp/Cifrados/backup.png'; 
-const clientBuffer = fs.readFileSync('./tmp/client.png');
+const pathBckToCifrados = "./tmp/Cifrados/backup.png";
+const clientBuffer = fs.readFileSync("./tmp/client.png");
 
 // cifrar archivo
 //encryptAndSaveFile(clientBuffer, pathBckToCifrados);
 
-
 // Función para validar que todo funciono
-(async () => {
-    const decryptedFile = await decryptFile('./tmp/Cifrados/backup.png');
-    console.log(decryptedFile);
-    fs.writeFileSync('./tmp/res-client.png', Buffer.from(decryptedFile));
-})()
-
-
+// (async () => {
+//     const decryptedFile = await decryptFile('./tmp/Cifrados/backup.png');
+//     console.log(decryptedFile);
+//     fs.writeFileSync('./tmp/res-client.png', Buffer.from(decryptedFile));
+// })()
 
 //Simulación cliente servidor
 // (async () => {
@@ -47,6 +43,13 @@ const clientBuffer = fs.readFileSync('./tmp/client.png');
 
 // })()
 
+// sockets
 
 
 
+// Simulación con sockets
+import { sync } from './src/client'
+(() => {
+  console.log('Cliente-1')
+  sync("./tmp/client.png")
+})();

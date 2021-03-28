@@ -1,25 +1,13 @@
-import net from 'net'
+import WSFCClientSocket from './WSFCClientSocket'
+import { createClienteRollingHashes } from './Rolling'
 
-// get arguments
-const PORT = process.argv[3] || '9000'
-const HOST = process.argv[2] || 'localhost'
-
-// creat a soccket
-const socket = new net.Socket();
-
-// connect event 
-socket.on('connect', function () {
-    console.log("Connect with socket sussfull");
-    socket.write("Hola server")
-})
-
-socket.on('error', function (error){
-    console.log("Conection error: ", error);
-} )
-
-socket.on('data', function (data) {
-    console.log(data.toString("utf-8"));
-})
-
-// connect socket
-socket.connect(parseInt(PORT), HOST);
+export const sync = (clientePath: any, port: number = 9000, host: string = 'localhost') => {
+    const wsfcSocket = WSFCClientSocket.getConnect(port, host)
+    const clienteRollingHashes = createClienteRollingHashes(clientePath)
+    
+    const wraper = JSON.stringify({clienteRollingHashes, action:'compareRollings'})
+    wsfcSocket.write(wraper)
+    wsfcSocket.on('data',  function(data){
+        console.log(data.toString('utf-8'));
+    })
+}
