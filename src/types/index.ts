@@ -1,5 +1,7 @@
 import { Rolling } from './Rolling'
+import {Action} from './Action';
 
 export {
-    Rolling
+    Rolling,
+    Action
 }

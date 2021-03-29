@@ -13,14 +13,18 @@ import { Rolling } from '../types'
     }
  */
 export const getChanges = (rollignsChangedVector: Array<Rolling>,  buffer: Buffer): any => {
-    let bufferChanges: any = {};
+    let bufferChanges: any = []
     for (let i = 0; i < rollignsChangedVector.length; i++) {
         let start = rollignsChangedVector[i].start;
         let end = rollignsChangedVector[i].end;
         if(end >= buffer.length) end = buffer.length;
         let subBuffer = buffer.slice(start, end);
-        bufferChanges[rollignsChangedVector[i].start] = subBuffer.toString('base64'); 
+        bufferChanges.push({
+            start:rollignsChangedVector[i].start,
+            buffer64:subBuffer.toString('base64')
+        })
     }
+    
     
     return bufferChanges;
 }

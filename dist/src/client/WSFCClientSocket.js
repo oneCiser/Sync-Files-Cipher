@@ -34,6 +34,7 @@ var WSFCClientSocket = /** @class */ (function () {
         if (this.socket) {
             this.socket.removeAllListeners('error');
             this.socket.destroy();
+            console.log('Connection close');
         }
         else {
             throw new Error("Socket not exist");

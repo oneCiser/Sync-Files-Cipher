@@ -12,14 +12,17 @@ exports.getChanges = void 0;
     }
  */
 var getChanges = function (rollignsChangedVector, buffer) {
-    var bufferChanges = {};
+    var bufferChanges = [];
     for (var i = 0; i < rollignsChangedVector.length; i++) {
         var start = rollignsChangedVector[i].start;
         var end = rollignsChangedVector[i].end;
         if (end >= buffer.length)
             end = buffer.length;
         var subBuffer = buffer.slice(start, end);
-        bufferChanges[rollignsChangedVector[i].start] = subBuffer.toString('base64');
+        bufferChanges.push({
+            start: rollignsChangedVector[i].start,
+            buffer64: subBuffer.toString('base64')
+        });
     }
     return bufferChanges;
 };

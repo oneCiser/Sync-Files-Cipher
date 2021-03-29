@@ -8,14 +8,14 @@ const pathBckToCifrados = "./tmp/Cifrados/backup.png";
 const clientBuffer = fs.readFileSync("./tmp/client.png");
 
 // cifrar archivo
-//encryptAndSaveFile(clientBuffer, pathBckToCifrados);
+// encryptAndSaveFile(clientBuffer, pathBckToCifrados);
 
 // Función para validar que todo funciono
-// (async () => {
-//     const decryptedFile = await decryptFile('./tmp/Cifrados/backup.png');
-//     console.log(decryptedFile);
-//     fs.writeFileSync('./tmp/res-client.png', Buffer.from(decryptedFile));
-// })()
+(async () => {
+    const decryptedFile = await decryptFile('./tmp/Cifrados/backup.png');
+    console.log(decryptedFile);
+    fs.writeFileSync('./tmp/res-client.png', Buffer.from(decryptedFile));
+})()
 
 //Simulación cliente servidor
 // (async () => {
@@ -24,13 +24,13 @@ const clientBuffer = fs.readFileSync("./tmp/client.png");
 //     console.log('Cliente-1')
 //     const clientePath = "./tmp/client.png";
 //     const clienteBuffer = fs.readFileSync(clientePath);
-//     const clienteRollingHashes = createRollingHashs(clienteBuffer);
+//     const clienteRollingHashes = await createRollingHashs(clienteBuffer);
 
 //     // Server side
 //     console.log('Server-1')
 //     const serverPath = './tmp/Cifrados/backup.png';
 //     const serverBuffer = await decryptFile(serverPath);
-//     const serverRollingHashes =  createRollingHashs(serverBuffer);
+//     const serverRollingHashes = await  createRollingHashs(serverBuffer);
 //     const serverRollingDiff = compareRolling(clienteRollingHashes, serverRollingHashes);
 
 //     // Client side
@@ -39,7 +39,7 @@ const clientBuffer = fs.readFileSync("./tmp/client.png");
 
 //     // Server side
 //     console.log('Server-2')
-//     syncFile(clientChanges, serverBuffer, serverPath);
+//     syncFile(clientChanges, serverPath);
 
 // })()
 
@@ -48,8 +48,8 @@ const clientBuffer = fs.readFileSync("./tmp/client.png");
 
 
 // Simulación con sockets
-import { sync } from './src/client'
-(() => {
-  console.log('Cliente-1')
-  sync("./tmp/client.png")
-})();
+// import { sync } from './src/client'
+// (() => {
+//   console.log('Cliente-1')
+//   sync("./tmp/client.png")
+// })();

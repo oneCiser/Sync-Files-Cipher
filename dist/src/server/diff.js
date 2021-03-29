@@ -47,6 +47,7 @@ exports.__esModule = true;
 exports.syncFile = void 0;
 var fs_1 = __importDefault(require("fs"));
 var encrypt_1 = require("../utils/encrypt");
+var encrypt_2 = require("../utils/encrypt");
 /**
  * Sync file server with file from client
  * @param {Array<String>} arrayChanges The map of buffers changed: { start: buffer64 }
@@ -54,42 +55,53 @@ var encrypt_1 = require("../utils/encrypt");
  * @param { String } path The path of file to sync
  * @param { number } [chunkSize = 3072] The size of chunks, default 3072
  */
-var syncFile = function (arrayChanges, backUpBuffer, path, chunkSize) {
+var syncFile = function (arrayChanges, path, fileClientSize, chunkSize) {
     if (chunkSize === void 0) { chunkSize = 3072; }
-    var tmpBuffer = [];
-    //la cantidad de sub buffers del backup
-    var chunks = Math.ceil(backUpBuffer.length / chunkSize);
-    for (var i = 0; i < chunks; i++) {
-        var start = i * chunkSize;
-        var end = (i + 1) * chunkSize;
-        if (end >= backUpBuffer.length) {
-            end = backUpBuffer.length;
-        }
-        if (arrayChanges[start]) {
-            var subBuffer = Buffer.from(arrayChanges[start], 'base64');
-            tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
-        }
-        else {
-            var subBuffer = backUpBuffer.slice(start, end);
-            tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
-        }
-    }
-    fs_1["default"].open(path, 'w', function (err, fd) {
-        return __awaiter(this, void 0, void 0, function () {
-            var bufferCifrado;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (err) {
-                            throw 'could not open file: ' + err;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var backUpBuffer, tmpBuffer, chunks, i, start, end, subBuffer, subBuffer;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, encrypt_2.decryptFile(path)];
+                case 1:
+                    backUpBuffer = _a.sent();
+                    tmpBuffer = [];
+                    chunks = Math.ceil(fileClientSize / chunkSize) //Math.ceil(backUpBuffer.length/chunkSize);
+                    ;
+                    for (i = 0; i < chunks; i++) {
+                        start = i * chunkSize;
+                        end = (i + 1) * chunkSize;
+                        if (end >= backUpBuffer.length) {
+                            end = backUpBuffer.length;
                         }
-                        return [4 /*yield*/, encrypt_1.encryptBuffer(Buffer.from(tmpBuffer))];
-                    case 1:
-                        bufferCifrado = _a.sent();
-                        fs_1["default"].writeSync(fd, bufferCifrado, 0, bufferCifrado.length, null);
-                        return [2 /*return*/];
-                }
-            });
+                        if (arrayChanges[start]) {
+                            subBuffer = Buffer.from(arrayChanges[start], 'base64');
+                            tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
+                        }
+                        else {
+                            subBuffer = backUpBuffer.slice(start, end);
+                            tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
+                        }
+                    }
+                    fs_1["default"].open(path, 'w', function (err, fd) {
+                        return __awaiter(this, void 0, void 0, function () {
+                            var bufferCifrado;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (err) {
+                                            throw 'could not open file: ' + err;
+                                        }
+                                        return [4 /*yield*/, encrypt_1.encryptBuffer(Buffer.from(tmpBuffer))];
+                                    case 1:
+                                        bufferCifrado = _a.sent();
+                                        fs_1["default"].writeSync(fd, bufferCifrado, 0, bufferCifrado.length, null);
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                    return [2 /*return*/];
+            }
         });
     });
 };

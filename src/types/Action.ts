@@ -1,0 +1,8 @@
+export enum Action {
+    COMPARE_ROLLINGS,
+    STREAM_BUFFERS,
+    PREPARE_STREAM,
+    CLOSE_CONNECTION,
+    STREAM_START
+}
+

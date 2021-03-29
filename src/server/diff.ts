@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { encryptBuffer } from '../utils/encrypt';
-
+import { decryptFile } from '../utils/encrypt';
 
 
 /**
@@ -10,10 +10,11 @@ import { encryptBuffer } from '../utils/encrypt';
  * @param { String } path The path of file to sync
  * @param { number } [chunkSize = 3072] The size of chunks, default 3072
  */
-export const syncFile = (arrayChanges: any, backUpBuffer: Buffer, path: any, chunkSize: number = 3072): void => {
+export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number,chunkSize: number = 3072) => {
+    const backUpBuffer = await decryptFile(path); //fs.readFileSync(path);
     let tmpBuffer: any = []
     //la cantidad de sub buffers del backup
-    let chunks = Math.ceil(backUpBuffer.length/chunkSize);
+    let chunks = Math.ceil(fileClientSize/chunkSize)  //Math.ceil(backUpBuffer.length/chunkSize);
 
     for (let i = 0; i < chunks; i++) {
         let start = i*chunkSize;
@@ -21,6 +22,7 @@ export const syncFile = (arrayChanges: any, backUpBuffer: Buffer, path: any, chu
         if(end >= backUpBuffer.length){ 
             end = backUpBuffer.length;
         }
+        
         if(arrayChanges[start]){
             let subBuffer: any = Buffer.from(arrayChanges[start], 'base64');
             tmpBuffer = [...tmpBuffer, ...subBuffer]
