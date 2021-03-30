@@ -14,7 +14,7 @@
   </a>
 </p>
 
-> One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (SFC)
+> One-way encrypted client-server file synchronization (mirroring) package in nodejs over sockets (SFC)
 
 ### 🏠 [Homepage](https://github.com/oneCiser/Web-Sync-Files-Cipher#readme)
 
