@@ -10,20 +10,20 @@ export default class WSFCClientSocket {
    *
    *
    * @private
-   * @static
+   * 
    * @type {net.Socket}
    * @memberof WSFCClientSocket
    */
-  private static socket: any;
+  private socket: any;
 
   /**
    * Set handles error and connect event
    *
    * @private
-   * @static
+   * 
    * @memberof WSFCClientSocket
    */
-  private static handles() {
+  private handles() {
     this.socket.on("connect", function () {
       console.log("Connect with socket sussfull");
     });
@@ -38,19 +38,19 @@ export default class WSFCClientSocket {
    * Singleton.
    * @memberof WSFCClientSocket
    */
-  private constructor() {}
+  public constructor() {}
 
 
   /**
    * Create a connect
    *
-   * @static
+   * 
    * @param {number} port The server port
    * @param {string} host The server host
    * @return {net.Socket} The new socket
    * @memberof WSFCClientSocket
    */
-  public static getConnect(port: number, host: string): net.Socket {
+  public getConnect(port: number, host: string): net.Socket {
     this.createSocket();
     this.socket.connect(port, host);
     this.handles();
@@ -62,23 +62,23 @@ export default class WSFCClientSocket {
    * Create a new socket 
    *
    * @private
-   * @static
+   * 
    * @memberof WSFCClientSocket
    */
-  private static createSocket() {
+  private createSocket() {
     // create a soccket
-    if (!this.socket) this.socket = new net.Socket();
+    this.socket = new net.Socket();
   }
 
 
   /**
    *  Return exist socket
    *
-   * @static
+   * 
    * @return net.Socket 
    * @memberof WSFCClientSocket
    */
-  public static getSocket(): net.Socket {
+  public getSocket(): net.Socket {
     return this.socket;
   }
 
@@ -86,10 +86,10 @@ export default class WSFCClientSocket {
   /**
    * Close connection
    *
-   * @static
+   * 
    * @memberof WSFCClientSocket
    */
-  public static closeConnection() {
+  public closeConnection() {
     if (this.socket) {
       this.socket.removeAllListeners("error");
       this.socket.destroy();

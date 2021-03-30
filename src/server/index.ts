@@ -29,9 +29,10 @@ import { encryptAndSaveFile } from '../utils/encrypt'
           try {
   
               const req = JSON.parse(data.toString());
-          
+  
               // Copare rolling client  file with rolling server file
               if (req.action == Action.COMPARE_ROLLINGS) {
+                console.log("path:",req.path);
                 fileClientSize = req.fileSize;
                 const serverRolling = await getRollingHashes(req.path);
                 const changesChunks = await compareRolling(
@@ -84,6 +85,7 @@ import { encryptAndSaveFile } from '../utils/encrypt'
                     action: Action.CLOSE_CONNECTION,// close connection
                   };
           
+                  console.log("path:",req.path);
                   await syncFile(buffersChanged, req.path, fileClientSize);
                   socket.write(JSON.stringify(res));
                 }
@@ -91,7 +93,7 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if remove a file 
              else if (req.action == Action.REMOVE_FILE){
-                
+              console.log("path:",req.path);
                // Remove file
                 if(fs.existsSync(req.path)){
                   fs.unlinkSync(req.path)
@@ -105,6 +107,7 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if remove a directory
               else if (req.action == Action.REMOVE_DIR){
+                console.log("path:",req.path);
                 // Remove dir
                 fs.rmdirSync(req.path, { recursive: true })
                 const res = {
@@ -115,6 +118,7 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if add file
               else if (req.action == Action.ADD_FILE){
+                console.log("path:",req.path);
                 // Encryp and save file
                 await encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path)
                 const res = {
@@ -125,6 +129,7 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if add directory
               else if (req.action == Action.ADD_DIR){
+                console.log("path:",req.path);
                 // Save dir
                 await fs.mkdirSync(req.path, { recursive: true })
                 const res = {

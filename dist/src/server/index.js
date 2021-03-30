@@ -72,6 +72,7 @@ var createServer = function (onLIstenCallback, port) {
                             _a.trys.push([0, 15, , 16]);
                             req = JSON.parse(data.toString());
                             if (!(req.action == types_1.Action.COMPARE_ROLLINGS)) return [3 /*break*/, 3];
+                            console.log("path:", req.path);
                             fileClientSize = req.fileSize;
                             return [4 /*yield*/, rolling_1.getRollingHashes(req.path)];
                         case 1:
@@ -117,6 +118,7 @@ var createServer = function (onLIstenCallback, port) {
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
+                            console.log("path:", req.path);
                             return [4 /*yield*/, diff_1.syncFile(buffersChanged, req.path, fileClientSize)];
                         case 6:
                             _a.sent();
@@ -125,6 +127,7 @@ var createServer = function (onLIstenCallback, port) {
                         case 7: return [3 /*break*/, 14];
                         case 8:
                             if (!(req.action == types_1.Action.REMOVE_FILE)) return [3 /*break*/, 9];
+                            console.log("path:", req.path);
                             // Remove file
                             if (fs_1["default"].existsSync(req.path)) {
                                 fs_1["default"].unlinkSync(req.path);
@@ -136,6 +139,7 @@ var createServer = function (onLIstenCallback, port) {
                             return [3 /*break*/, 14];
                         case 9:
                             if (!(req.action == types_1.Action.REMOVE_DIR)) return [3 /*break*/, 10];
+                            console.log("path:", req.path);
                             // Remove dir
                             fs_1["default"].rmdirSync(req.path, { recursive: true });
                             res = {
@@ -145,6 +149,7 @@ var createServer = function (onLIstenCallback, port) {
                             return [3 /*break*/, 14];
                         case 10:
                             if (!(req.action == types_1.Action.ADD_FILE)) return [3 /*break*/, 12];
+                            console.log("path:", req.path);
                             // Encryp and save file
                             return [4 /*yield*/, encrypt_1.encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path)];
                         case 11:
@@ -157,6 +162,7 @@ var createServer = function (onLIstenCallback, port) {
                             return [3 /*break*/, 14];
                         case 12:
                             if (!(req.action == types_1.Action.ADD_DIR)) return [3 /*break*/, 14];
+                            console.log("path:", req.path);
                             // Save dir
                             return [4 /*yield*/, fs_1["default"].mkdirSync(req.path, { recursive: true })];
                         case 13:

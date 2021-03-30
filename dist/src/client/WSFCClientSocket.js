@@ -20,10 +20,10 @@ var WSFCClientSocket = /** @class */ (function () {
      * Set handles error and connect event
      *
      * @private
-     * @static
+     *
      * @memberof WSFCClientSocket
      */
-    WSFCClientSocket.handles = function () {
+    WSFCClientSocket.prototype.handles = function () {
         this.socket.on("connect", function () {
             console.log("Connect with socket sussfull");
         });
@@ -34,13 +34,13 @@ var WSFCClientSocket = /** @class */ (function () {
     /**
      * Create a connect
      *
-     * @static
+     *
      * @param {number} port The server port
      * @param {string} host The server host
      * @return {net.Socket} The new socket
      * @memberof WSFCClientSocket
      */
-    WSFCClientSocket.getConnect = function (port, host) {
+    WSFCClientSocket.prototype.getConnect = function (port, host) {
         this.createSocket();
         this.socket.connect(port, host);
         this.handles();
@@ -50,31 +50,30 @@ var WSFCClientSocket = /** @class */ (function () {
      * Create a new socket
      *
      * @private
-     * @static
+     *
      * @memberof WSFCClientSocket
      */
-    WSFCClientSocket.createSocket = function () {
+    WSFCClientSocket.prototype.createSocket = function () {
         // create a soccket
-        if (!this.socket)
-            this.socket = new net_1["default"].Socket();
+        this.socket = new net_1["default"].Socket();
     };
     /**
      *  Return exist socket
      *
-     * @static
+     *
      * @return net.Socket
      * @memberof WSFCClientSocket
      */
-    WSFCClientSocket.getSocket = function () {
+    WSFCClientSocket.prototype.getSocket = function () {
         return this.socket;
     };
     /**
      * Close connection
      *
-     * @static
+     *
      * @memberof WSFCClientSocket
      */
-    WSFCClientSocket.closeConnection = function () {
+    WSFCClientSocket.prototype.closeConnection = function () {
         if (this.socket) {
             this.socket.removeAllListeners("error");
             this.socket.destroy();

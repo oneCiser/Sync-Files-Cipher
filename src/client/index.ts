@@ -10,6 +10,17 @@ import path from 'path'
 
 
 /**
+ * Join paths client with prefix server path
+ *
+ * @param {string} serverPrefix The prefix server path
+ * @param {string} clientPath The client path
+ * @return {string} The path joined
+ */
+const joinPath = (serverPrefix: string, clientPath: string): string => {
+  return path.join(serverPrefix, clientPath)
+}
+
+/**
  * Set common actions
  *
  * @param {net.Socket} wsfcSocket The socket for listen data
@@ -20,6 +31,7 @@ import path from 'path'
  */
 const socketCommonHandlers = (
   wsfcSocket: net.Socket,
+  wSFCClientSocketInstance: any,
   userWatchCallback: (eventType: EventWatch, pathChanged: string) => void,
   userErrorCallback: (error: any) => void,
   eventType: EventWatch, 
@@ -29,12 +41,12 @@ const socketCommonHandlers = (
     const res = JSON.parse(data.toString("utf-8"));
 
     if (res.action == Action.CLOSE_CONNECTION) {
-      WSFCClientSocket.closeConnection();
+      wSFCClientSocketInstance.closeConnection();
       userWatchCallback(eventType, pathChanged);
 
       // If exist error call user error callback
     } else if (res.action == Action.ERROR) {
-      WSFCClientSocket.closeConnection();
+      wSFCClientSocketInstance.closeConnection();
       userErrorCallback(new Error(res.message));
     }
   });
@@ -66,16 +78,15 @@ export const sync = async (
   // eventType: The type event
   // path: The path of file or directory changed
   const watcher =  watch(pathToWatch, async (eventType: EventWatch, pathChanged: string) => {
-    // Modify the path for coincide server path
-    pathChanged = path.join(pathPrefix, pathChanged)
-
+    
     try {
       // if the file change, start the sync
       if (eventType === EventWatch.CHANGE) {
         console.log(`The file ${pathChanged} changed`);
 
         // create a socket
-        const wsfcSocket = WSFCClientSocket.getConnect(port, host);
+        const wSFCClientSocketInstance = new WSFCClientSocket()
+        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
 
         // load file to sync
         const fileClient = fs.readFileSync(pathChanged);
@@ -88,7 +99,7 @@ export const sync = async (
         const req = JSON.stringify({
           rollingHashes, // hashes from client file
           action: Action.COMPARE_ROLLINGS,
-          path: pathChanged, // path of file to sync
+          path: joinPath(pathPrefix, pathChanged), // path of file to sync server
           fileSize: fileClient.length, // size of client file
         });
 
@@ -120,21 +131,21 @@ export const sync = async (
               start: buffersChanged[res.index].start,
               buffer64: buffersChanged[res.index].buffer64,
               index: res.index,
-              path: pathChanged,
+              path: joinPath(pathPrefix, pathChanged),
             };
 
             wsfcSocket.write(JSON.stringify(req));
 
             // close connection and call user callback
           } else if (res.action == Action.CLOSE_CONNECTION) {
-            WSFCClientSocket.closeConnection();
+            wSFCClientSocketInstance.closeConnection();
 
             // when finish call user callback
             userWatchCallback(eventType, pathChanged);
 
             // If exist error call user error callback
           } else if (res.action == Action.ERROR) {
-            WSFCClientSocket.closeConnection();
+            wSFCClientSocketInstance.closeConnection();
 
             // when finish call user callback
             userErrorCallback(new Error(res.message));
@@ -146,17 +157,18 @@ export const sync = async (
       else if (eventType === EventWatch.REMOVE_FILE) {
         console.log(`The file ${pathChanged} was removed`);
         // create a socket
-        const wsfcSocket = WSFCClientSocket.getConnect(port, host);
+        const wSFCClientSocketInstance = new WSFCClientSocket()
+        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
 
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_FILE,
-          path: pathChanged,
+          path: joinPath(pathPrefix, pathChanged),
         });
         wsfcSocket.write(req);
 
         // common hanlders for current socket data
-        socketCommonHandlers(wsfcSocket, userWatchCallback, userErrorCallback, eventType, pathChanged)
+        socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged)
 
 
       } 
@@ -165,17 +177,18 @@ export const sync = async (
       else if (eventType === EventWatch.REMOVE_DIR) { 
         console.log(`The dir ${pathChanged} was removed`);
         // create a socket
-        const wsfcSocket = WSFCClientSocket.getConnect(port, host);
+        const wSFCClientSocketInstance = new WSFCClientSocket()
+        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
 
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_DIR,
-          path: pathChanged,
+          path: joinPath(pathPrefix, pathChanged),
         });
         wsfcSocket.write(req);
 
         // common hanlders for current socket data
-        socketCommonHandlers(wsfcSocket, userWatchCallback, userErrorCallback, eventType, pathChanged)
+        socketCommonHandlers(wsfcSocket,wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged)
       }
      
 
@@ -183,36 +196,38 @@ export const sync = async (
       else if (eventType === EventWatch.ADD_FILE) { 
         console.log(`The file ${pathChanged} was added`);
         // create a socket
-        const wsfcSocket = WSFCClientSocket.getConnect(port, host);
+        const wSFCClientSocketInstance = new WSFCClientSocket()
+        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
         // load new file
         const newFile = fs.readFileSync(pathChanged)
         // make a request for create backup
         const req = JSON.stringify({
           action: Action.ADD_FILE,
-          path: pathChanged,
+          path: joinPath(pathPrefix, pathChanged),
           file: newFile.toString('base64')
         });
         wsfcSocket.write(req);
 
         // common hanlders for current socket data
-        socketCommonHandlers(wsfcSocket, userWatchCallback, userErrorCallback, eventType, pathChanged)
+        socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged)
       }
 
       // if add directory
       else if (eventType === EventWatch.ADD_DIR) { 
         console.log(`The dir ${pathChanged} was added`);
         // create a socket
-        const wsfcSocket = WSFCClientSocket.getConnect(port, host);
+        const wSFCClientSocketInstance = new WSFCClientSocket()
+        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
 
         // make a request for create dir backup
         const req = JSON.stringify({
           action: Action.ADD_DIR,
-          path: pathChanged,
+          path: joinPath(pathPrefix, pathChanged),
         });
         wsfcSocket.write(req);
 
         // common hanlders for current socket data
-        socketCommonHandlers(wsfcSocket, userWatchCallback, userErrorCallback, eventType, pathChanged)
+        socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged)
       }
 
       

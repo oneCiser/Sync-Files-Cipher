@@ -14,18 +14,18 @@ import fs from "fs";
       console.log(eventType, pathChanged);
       // Prueba de sincronización
       (async () => {
-        if (fs.existsSync(pathBckToCifrados)) {
-          const decryptedFile = await decryptFile(pathBckToCifrados);
+        if (fs.existsSync(pathChanged) && !fs.statSync(pathChanged).isDirectory) {
+          const decryptedFile = await decryptFile(`/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal${pathChanged}`);
           console.log("Nuevo contenido: ", decryptedFile.toString());
         } else {
-          console.log(`${pathBckToCifrados} not exist`);
+          console.log(`${pathChanged} not exist`);
         }
       })();
     },
     function (error: any) {
       console.log("Sync error: ", error);
     },
-    '/home/stream-for-lab.co/deiver-guerra-carrascal'
+    '/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal'
   );
 
   // simula close

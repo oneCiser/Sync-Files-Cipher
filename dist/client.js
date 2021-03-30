@@ -59,14 +59,14 @@ var fs_1 = __importDefault(require("fs"));
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
-                                    if (!fs_1["default"].existsSync(pathBckToCifrados)) return [3 /*break*/, 2];
-                                    return [4 /*yield*/, encrypt_1.decryptFile(pathBckToCifrados)];
+                                    if (!(fs_1["default"].existsSync(pathChanged) && !fs_1["default"].statSync(pathChanged).isDirectory)) return [3 /*break*/, 2];
+                                    return [4 /*yield*/, encrypt_1.decryptFile("/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal" + pathChanged)];
                                 case 1:
                                     decryptedFile = _a.sent();
                                     console.log("Nuevo contenido: ", decryptedFile.toString());
                                     return [3 /*break*/, 3];
                                 case 2:
-                                    console.log(pathBckToCifrados + " not exist");
+                                    console.log(pathChanged + " not exist");
                                     _a.label = 3;
                                 case 3: return [2 /*return*/];
                             }
@@ -74,7 +74,7 @@ var fs_1 = __importDefault(require("fs"));
                     }); })();
                 }, function (error) {
                     console.log("Sync error: ", error);
-                }, '/home/stream-for-lab.co/deiver-guerra-carrascal')];
+                }, '/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal')];
             case 1:
                 watcher = _a.sent();
                 return [2 /*return*/];
