@@ -1,6 +1,6 @@
 {
   "name": "sync-files-cipher",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (SFC)",
   "main": "dist/index.js",
   "scripts": {
@@ -10,7 +10,13 @@
     "type": "git",
     "url": "git+https://github.com/oneCiser/Web-Sync-Files-Cipher.git"
   },
-  "keywords": ["sync", "socket", "encrypt", "nodejs", "backup"],
+  "keywords": [
+    "sync",
+    "socket",
+    "encrypt",
+    "nodejs",
+    "backup"
+  ],
   "author": "Juan Francisco Javier Perez Rivero, Deiver Guerra Carrascal",
   "license": "MIT",
   "bugs": {
