@@ -37,9 +37,9 @@ createServer(
 
 
 #### CreateServer function
-> Create a socket server ans start listen connections, return a nodejs net.Server instance
+> Create a socket server and start listen connections, return a nodejs net.Server instance
 ```
-createServer = (aesKey, iv, onLIstenCallback, port )
+createServer(aesKey, iv, onLIstenCallback, port )
 ```
 
 | Argument             | Type     | Description                                                                                                    |
