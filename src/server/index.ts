@@ -9,11 +9,13 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 /**
  * Create a socket server
  *
+ * @param {string} aesKey The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @param {() => void} onLIstenCallback The callback when server is listening
  * @param {number} [port=9000] The port, default 9000
  * @return {net.Server}  The server as instance of net.Server
  */
- export const createServer = ( onLIstenCallback: () => void, port = 9000): net.Server => {
+ export const createServer = (aesKey: string, iv: string, onLIstenCallback: () => void, port = 9000): net.Server => {
   const SERVER = net.createServer(function (socket) {
 
     // contains the chunks changed
@@ -32,7 +34,6 @@ import { encryptAndSaveFile } from '../utils/encrypt'
   
               // Copare rolling client  file with rolling server file
               if (req.action == Action.COMPARE_ROLLINGS) {
-                console.log("path:",req.path);
                 fileClientSize = req.fileSize;
                 const serverRolling = await getRollingHashes(req.path);
                 const changesChunks = await compareRolling(
@@ -85,15 +86,13 @@ import { encryptAndSaveFile } from '../utils/encrypt'
                     action: Action.CLOSE_CONNECTION,// close connection
                   };
           
-                  console.log("path:",req.path);
-                  await syncFile(buffersChanged, req.path, fileClientSize);
+                  await syncFile(buffersChanged, req.path, fileClientSize, aesKey, iv);
                   socket.write(JSON.stringify(res));
                 }
               }
 
               // if remove a file 
              else if (req.action == Action.REMOVE_FILE){
-              console.log("path:",req.path);
                // Remove file
                 if(fs.existsSync(req.path)){
                   fs.unlinkSync(req.path)
@@ -107,9 +106,11 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if remove a directory
               else if (req.action == Action.REMOVE_DIR){
-                console.log("path:",req.path);
                 // Remove dir
-                fs.rmdirSync(req.path, { recursive: true })
+                if(fs.existsSync(req.path)){
+                  fs.rmdirSync(req.path, { recursive: true })
+                }
+                
                 const res = {
                   action: Action.CLOSE_CONNECTION,// close connection
                 };
@@ -118,9 +119,10 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if add file
               else if (req.action == Action.ADD_FILE){
-                console.log("path:",req.path);
                 // Encryp and save file
-                await encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path)
+                if(!fs.existsSync(req.path)){
+                  await encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path, aesKey, iv)
+                }
                 const res = {
                   action: Action.CLOSE_CONNECTION,// close connection
                 };
@@ -129,9 +131,11 @@ import { encryptAndSaveFile } from '../utils/encrypt'
 
               // if add directory
               else if (req.action == Action.ADD_DIR){
-                console.log("path:",req.path);
                 // Save dir
-                await fs.mkdirSync(req.path, { recursive: true })
+                if(!fs.existsSync(req.path)){
+                  await fs.mkdirSync(req.path, { recursive: true })
+                }
+                
                 const res = {
                   action: Action.CLOSE_CONNECTION,// close connection
                 };

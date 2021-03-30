@@ -10,10 +10,10 @@ import { decryptFile } from '../utils/encrypt';
  * @param { String } path The path of file to sync
  * @param { number } [chunkSize = 3072] The size of chunks, default 3072
  */
-export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number,chunkSize: number = 3072) => {
+export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number, key: string, iv: string, chunkSize: number = 3072) => {
     console.log("Decrypting and sync file encrypted: ", path);
     
-    const backUpBuffer = await decryptFile(path);
+    const backUpBuffer = await decryptFile(path, key, iv);
     let tmpBuffer: any = []
     //la cantidad de sub buffers del backup
     let chunks = Math.ceil(fileClientSize/chunkSize)  //Math.ceil(backUpBuffer.length/chunkSize);
@@ -40,7 +40,7 @@ export const syncFile = async (arrayChanges: any, path: any, fileClientSize: num
         if (err) {
             throw 'could not open file: ' + err;
         }
-        const bufferCifrado = await encryptBuffer(Buffer.from(tmpBuffer));
+        const bufferCifrado = await encryptBuffer(Buffer.from(tmpBuffer), key, iv);
         fs.writeSync(fd, bufferCifrado , 0, bufferCifrado.length, null);
     });
 }

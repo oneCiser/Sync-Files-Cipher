@@ -49,11 +49,13 @@ var encrypt_1 = require("../utils/encrypt");
 /**
  * Create a socket server
  *
+ * @param {string} aesKey The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @param {() => void} onLIstenCallback The callback when server is listening
  * @param {number} [port=9000] The port, default 9000
  * @return {net.Server}  The server as instance of net.Server
  */
-var createServer = function (onLIstenCallback, port) {
+var createServer = function (aesKey, iv, onLIstenCallback, port) {
     if (port === void 0) { port = 9000; }
     var SERVER = net_1["default"].createServer(function (socket) {
         // contains the chunks changed
@@ -69,10 +71,9 @@ var createServer = function (onLIstenCallback, port) {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            _a.trys.push([0, 15, , 16]);
+                            _a.trys.push([0, 17, , 18]);
                             req = JSON.parse(data.toString());
                             if (!(req.action == types_1.Action.COMPARE_ROLLINGS)) return [3 /*break*/, 3];
-                            console.log("path:", req.path);
                             fileClientSize = req.fileSize;
                             return [4 /*yield*/, rolling_1.getRollingHashes(req.path)];
                         case 1:
@@ -85,7 +86,7 @@ var createServer = function (onLIstenCallback, port) {
                                 changesChunks: changesChunks
                             };
                             socket.write(JSON.stringify(res));
-                            return [3 /*break*/, 14];
+                            return [3 /*break*/, 16];
                         case 3:
                             if (!(req.action == types_1.Action.STREAM_START)) return [3 /*break*/, 4];
                             if (req.size == 0) { // not have changes
@@ -102,7 +103,7 @@ var createServer = function (onLIstenCallback, port) {
                                 };
                                 socket.write(JSON.stringify(res));
                             }
-                            return [3 /*break*/, 14];
+                            return [3 /*break*/, 16];
                         case 4:
                             if (!(req.action == types_1.Action.STREAM_BUFFERS)) return [3 /*break*/, 8];
                             if (!(req.index < buffersChangedSize - 1)) return [3 /*break*/, 5];
@@ -118,16 +119,14 @@ var createServer = function (onLIstenCallback, port) {
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
-                            console.log("path:", req.path);
-                            return [4 /*yield*/, diff_1.syncFile(buffersChanged, req.path, fileClientSize)];
+                            return [4 /*yield*/, diff_1.syncFile(buffersChanged, req.path, fileClientSize, aesKey, iv)];
                         case 6:
                             _a.sent();
                             socket.write(JSON.stringify(res));
                             _a.label = 7;
-                        case 7: return [3 /*break*/, 14];
+                        case 7: return [3 /*break*/, 16];
                         case 8:
                             if (!(req.action == types_1.Action.REMOVE_FILE)) return [3 /*break*/, 9];
-                            console.log("path:", req.path);
                             // Remove file
                             if (fs_1["default"].existsSync(req.path)) {
                                 fs_1["default"].unlinkSync(req.path);
@@ -136,45 +135,46 @@ var createServer = function (onLIstenCallback, port) {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
                             socket.write(JSON.stringify(res));
-                            return [3 /*break*/, 14];
+                            return [3 /*break*/, 16];
                         case 9:
                             if (!(req.action == types_1.Action.REMOVE_DIR)) return [3 /*break*/, 10];
-                            console.log("path:", req.path);
                             // Remove dir
-                            fs_1["default"].rmdirSync(req.path, { recursive: true });
+                            if (fs_1["default"].existsSync(req.path)) {
+                                fs_1["default"].rmdirSync(req.path, { recursive: true });
+                            }
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
                             socket.write(JSON.stringify(res));
-                            return [3 /*break*/, 14];
+                            return [3 /*break*/, 16];
                         case 10:
-                            if (!(req.action == types_1.Action.ADD_FILE)) return [3 /*break*/, 12];
-                            console.log("path:", req.path);
-                            // Encryp and save file
-                            return [4 /*yield*/, encrypt_1.encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path)];
+                            if (!(req.action == types_1.Action.ADD_FILE)) return [3 /*break*/, 13];
+                            if (!!fs_1["default"].existsSync(req.path)) return [3 /*break*/, 12];
+                            return [4 /*yield*/, encrypt_1.encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path, aesKey, iv)];
                         case 11:
-                            // Encryp and save file
                             _a.sent();
-                            res = {
-                                action: types_1.Action.CLOSE_CONNECTION
-                            };
-                            socket.write(JSON.stringify(res));
-                            return [3 /*break*/, 14];
+                            _a.label = 12;
                         case 12:
-                            if (!(req.action == types_1.Action.ADD_DIR)) return [3 /*break*/, 14];
-                            console.log("path:", req.path);
-                            // Save dir
-                            return [4 /*yield*/, fs_1["default"].mkdirSync(req.path, { recursive: true })];
-                        case 13:
-                            // Save dir
-                            _a.sent();
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
                             socket.write(JSON.stringify(res));
-                            _a.label = 14;
-                        case 14: return [3 /*break*/, 16];
+                            return [3 /*break*/, 16];
+                        case 13:
+                            if (!(req.action == types_1.Action.ADD_DIR)) return [3 /*break*/, 16];
+                            if (!!fs_1["default"].existsSync(req.path)) return [3 /*break*/, 15];
+                            return [4 /*yield*/, fs_1["default"].mkdirSync(req.path, { recursive: true })];
+                        case 14:
+                            _a.sent();
+                            _a.label = 15;
                         case 15:
+                            res = {
+                                action: types_1.Action.CLOSE_CONNECTION
+                            };
+                            socket.write(JSON.stringify(res));
+                            _a.label = 16;
+                        case 16: return [3 /*break*/, 18];
+                        case 17:
                             error_1 = _a.sent();
                             console.log("** Server error **");
                             res = {
@@ -182,8 +182,8 @@ var createServer = function (onLIstenCallback, port) {
                                 message: error_1.message
                             };
                             socket.write(JSON.stringify(res));
-                            return [3 /*break*/, 16];
-                        case 16: return [2 /*return*/];
+                            return [3 /*break*/, 18];
+                        case 18: return [2 /*return*/];
                     }
                 });
             });

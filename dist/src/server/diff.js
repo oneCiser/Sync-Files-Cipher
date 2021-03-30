@@ -55,7 +55,7 @@ var encrypt_2 = require("../utils/encrypt");
  * @param { String } path The path of file to sync
  * @param { number } [chunkSize = 3072] The size of chunks, default 3072
  */
-var syncFile = function (arrayChanges, path, fileClientSize, chunkSize) {
+var syncFile = function (arrayChanges, path, fileClientSize, key, iv, chunkSize) {
     if (chunkSize === void 0) { chunkSize = 3072; }
     return __awaiter(void 0, void 0, void 0, function () {
         var backUpBuffer, tmpBuffer, chunks, i, start, end, subBuffer, subBuffer;
@@ -63,7 +63,7 @@ var syncFile = function (arrayChanges, path, fileClientSize, chunkSize) {
             switch (_a.label) {
                 case 0:
                     console.log("Decrypting and sync file encrypted: ", path);
-                    return [4 /*yield*/, encrypt_2.decryptFile(path)];
+                    return [4 /*yield*/, encrypt_2.decryptFile(path, key, iv)];
                 case 1:
                     backUpBuffer = _a.sent();
                     tmpBuffer = [];
@@ -93,7 +93,7 @@ var syncFile = function (arrayChanges, path, fileClientSize, chunkSize) {
                                         if (err) {
                                             throw 'could not open file: ' + err;
                                         }
-                                        return [4 /*yield*/, encrypt_1.encryptBuffer(Buffer.from(tmpBuffer))];
+                                        return [4 /*yield*/, encrypt_1.encryptBuffer(Buffer.from(tmpBuffer), key, iv)];
                                     case 1:
                                         bufferCifrado = _a.sent();
                                         fs_1["default"].writeSync(fd, bufferCifrado, 0, bufferCifrado.length, null);

@@ -1,7 +1,7 @@
 {
   "name": "sync-files-cipher",
   "version": "0.1.0",
-  "description": "One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (WSFC) ",
+  "description": "One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (SFC)",
   "main": "dist/index.js",
   "scripts": {
     "tsc": "tsc --watch"

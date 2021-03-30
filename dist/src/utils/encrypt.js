@@ -48,15 +48,16 @@ exports.decryptFile = exports.decryptBuffer = exports.encryptBuffer = exports.de
 var crypto_1 = __importDefault(require("crypto"));
 var fs_1 = __importDefault(require("fs"));
 var ALGORITHM = "aes-256-cbc";
-var key = "8BZ3pCTp71LX5I//QsBYdz7w4JHXNVehSBXuXnScdqg=";
-var iv = "AAAAAAAAAAAAAAAAAAAAAA==";
 /**
  * Encrypt and save a file
+ *
  * @param {Buffer} file The file to encrypt
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @param {String} path The path of file
  * @return {Buffer}  The buffer encrypted
  */
-var encryptAndSaveFile = function (file, path) { return __awaiter(void 0, void 0, void 0, function () {
+var encryptAndSaveFile = function (file, path, key, iv) { return __awaiter(void 0, void 0, void 0, function () {
     var cipher, encrypted;
     return __generator(this, function (_a) {
         cipher = crypto_1["default"].createCipheriv(ALGORITHM, Buffer.from(key, "base64"), Buffer.from(iv, "base64"));
@@ -71,9 +72,11 @@ exports.encryptAndSaveFile = encryptAndSaveFile;
  * Encrypt and save a file by chunks
  * @param {Buffer} file The file to encrypt
  * @param {String} path The path of file
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @param {number} [chunksize=3072] The size of chunks
  */
-var encryptAndSaveChunk = function (file, path, chunksize) {
+var encryptAndSaveChunk = function (file, path, key, iv, chunksize) {
     if (chunksize === void 0) { chunksize = 3072; }
     var chunks = Math.ceil(file.length / chunksize);
     fs_1["default"].open(path, "w+", function (err, fd) {
@@ -90,7 +93,7 @@ var encryptAndSaveChunk = function (file, path, chunksize) {
                         end = (index + 1) * chunksize;
                         if (end >= file.length)
                             end = file.length;
-                        return [4 /*yield*/, exports.encryptBuffer(file.slice(start, end))];
+                        return [4 /*yield*/, exports.encryptBuffer(file.slice(start, end), key, iv)];
                     case 2:
                         chunkBufferCipher = _a.sent();
                         fs_1["default"].writeSync(fd, chunkBufferCipher, 0, chunkBufferCipher.length, start);
@@ -108,10 +111,12 @@ exports.encryptAndSaveChunk = encryptAndSaveChunk;
 /**
  * Decrypt file by chunks
  * @param {String} path The path of file
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @param {number} [chunksize=3072] The size of chunks
  * @return {Promise<Array<Buffer>>} The buffer of chunks decrypted
  */
-var decryptFilesByChunks = function (path, chunksize) {
+var decryptFilesByChunks = function (path, key, iv, chunksize) {
     if (chunksize === void 0) { chunksize = 3072; }
     return __awaiter(void 0, void 0, void 0, function () {
         var fullBufferEncrypt, chunks, decryptedBuffer, index, start, end, chunkBufferDecrypted;
@@ -124,7 +129,7 @@ var decryptFilesByChunks = function (path, chunksize) {
                 end = (index + 1) * chunksize;
                 if (end >= fullBufferEncrypt.length)
                     end = fullBufferEncrypt.length;
-                chunkBufferDecrypted = exports.decryptBuffer(fullBufferEncrypt.slice(start, end));
+                chunkBufferDecrypted = exports.decryptBuffer(fullBufferEncrypt.slice(start, end), key, iv);
                 decryptedBuffer = __spreadArray(__spreadArray([], decryptedBuffer), [chunkBufferDecrypted]);
             }
             return [2 /*return*/, decryptedBuffer];
@@ -135,9 +140,11 @@ exports.decryptFilesByChunks = decryptFilesByChunks;
 /**
  * Encrypt a chunk
  * @param {Buffer} chunk The chunk
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @return {Promise<Buffer>}  The chunk encrypted
  */
-var encryptBuffer = function (chunk) { return __awaiter(void 0, void 0, void 0, function () {
+var encryptBuffer = function (chunk, key, iv) { return __awaiter(void 0, void 0, void 0, function () {
     var cipher, encrypted;
     return __generator(this, function (_a) {
         cipher = crypto_1["default"].createCipheriv(ALGORITHM, Buffer.from(key, "base64"), Buffer.from(iv, "base64"));
@@ -150,9 +157,11 @@ exports.encryptBuffer = encryptBuffer;
 /**
  * Decrypt a buffer
  * @param {Buffer} buffereEncrypted The buffer encrypted
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @return {Buffer} Rhe chunk decrypted
  */
-var decryptBuffer = function (buffereEncrypted) {
+var decryptBuffer = function (buffereEncrypted, key, iv) {
     var decipher = crypto_1["default"].createDecipheriv(ALGORITHM, Buffer.from(key, "base64"), Buffer.from(iv, "base64"));
     var decrypted = decipher.update(buffereEncrypted);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
@@ -162,9 +171,11 @@ exports.decryptBuffer = decryptBuffer;
 /**
  * Decrypt a file
  * @param {String} path The path of file to decrypt
+ * @param {string} key The key is the raw key used by the algorithm. Must be utf8 encoded string, see nodejs crypto for more details
+ * @param {string} iv Is an initialization vector. Must be utf8 encoded string, see nodejs crypto for more details
  * @return {Buffer}  The file decrypted
  */
-var decryptFile = function (path) { return __awaiter(void 0, void 0, void 0, function () {
+var decryptFile = function (path, key, iv) { return __awaiter(void 0, void 0, void 0, function () {
     var fileEncrypted, decipher, decrypted;
     return __generator(this, function (_a) {
         fileEncrypted = fs_1["default"].readFileSync(path);

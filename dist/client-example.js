@@ -39,15 +39,44 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.sendRollingToServer = void 0;
+var _1 = require(".");
+var clientPath = "/tmp/client";
+var encrypt_1 = require("./src/utils/encrypt");
 var fs_1 = __importDefault(require("fs"));
-var rolling_1 = require("../utils/rolling");
-var sendRollingToServer = function (path) { return __awaiter(void 0, void 0, void 0, function () {
-    var buffer, clienteRollingHashes;
+(function () { return __awaiter(void 0, void 0, void 0, function () {
+    var watcher;
     return __generator(this, function (_a) {
-        buffer = fs_1["default"].readFileSync(path);
-        clienteRollingHashes = rolling_1.createRollingHashs(buffer);
-        return [2 /*return*/, clienteRollingHashes];
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, _1.sync(clientPath, function (eventType, pathChanged) {
+                    var _this = this;
+                    console.log("--- Succes sync ---");
+                    console.log(eventType, pathChanged);
+                    // Prueba de sincronización
+                    (function () { return __awaiter(_this, void 0, void 0, function () {
+                        var isDirectory, exist, buffer;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    isDirectory = fs_1["default"].statSync(pathChanged).isDirectory();
+                                    exist = fs_1["default"].existsSync(pathChanged);
+                                    console.log("Exist ?: ", exist);
+                                    console.log("Is directory ?: ", isDirectory);
+                                    if (!(!isDirectory && exist)) return [3 /*break*/, 2];
+                                    return [4 /*yield*/, encrypt_1.decryptFile("/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal" + pathChanged, '8BZ3pCTp71LX5I//QsBYdz7w4JHXNVehSBXuXnScdqg=', 'AAAAAAAAAAAAAAAAAAAAAA==')];
+                                case 1:
+                                    buffer = _a.sent();
+                                    console.log(buffer.toString());
+                                    _a.label = 2;
+                                case 2: return [2 /*return*/];
+                            }
+                        });
+                    }); })();
+                }, function (error) {
+                    console.log("Sync error: ", error);
+                }, '/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal')];
+            case 1:
+                watcher = _a.sent();
+                return [2 /*return*/];
+        }
     });
-}); };
-exports.sendRollingToServer = sendRollingToServer;
+}); })();

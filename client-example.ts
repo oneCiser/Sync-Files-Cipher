@@ -1,16 +1,15 @@
 import { sync } from ".";
 import { EventWatch } from "./src/types";
-const pathBckToCifrados = "/tmp/Cifrados/backup.txt";
 const clientPath = "/tmp/client";
 import { decryptFile } from "./src/utils/encrypt";
 import fs from "fs";
 
-// Simulación con sockets
+
 (async () => {
   const watcher = await sync(
     clientPath,
     function (eventType: EventWatch, pathChanged: string) {
-      console.log("Succes sync: Aqui el client hace algo");
+      console.log("--- Succes sync ---");
       console.log(eventType, pathChanged);
 
       // Prueba de sincronización
@@ -23,7 +22,9 @@ import fs from "fs";
         console.log("Is directory ?: ", isDirectory);
 
         if(!isDirectory && exist){
-          const buffer = fs.readFileSync(pathChanged)
+          const buffer = await decryptFile(`/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal${pathChanged}`,
+          '8BZ3pCTp71LX5I//QsBYdz7w4JHXNVehSBXuXnScdqg=',
+          'AAAAAAAAAAAAAAAAAAAAAA==')
           console.log(buffer.toString());
         }
         

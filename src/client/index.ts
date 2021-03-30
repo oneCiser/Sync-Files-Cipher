@@ -58,8 +58,8 @@ const socketCommonHandlers = (
  * Sync the file client with backup files when there are changes
  *
  * @param {string} pathToWatch The path to watch
- * @param {Function} userWatchCallback The callback to call when sync finish: (event, type) => {}
- * @param {Function} userErrorCallback The callback to call when sync crash: (error) => {}
+ * @param {Function} userWatchCallback The callback to call when sync is executed.: (event, type) => {}
+ * @param {Function} userErrorCallback The callback to call when sync is crashed.: (error) => {}
  * @param {number} [port=9000] The server port, default 9000
  * @param {string} [host="localhost"] The server host, default localhost
  * @param {string} pathPrefix The prefix path, default empty
