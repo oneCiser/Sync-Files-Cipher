@@ -81,11 +81,22 @@ return a nodejs FSWatcher instance
 | Argument              | Type     | Description                                                        |
 |-----------------------|----------|--------------------------------------------------------------------|
 | **pathToWatch**       | String   | The path to watch.                                                 |
-| **userWatchCallback** | Function | The callback to call when sync is executed.                        |
+| **userWatchCallback** | Function | The callback to call when sync is executed and passes the enent type and the path changed.                      |
 | **userErrorCallback** | Function | The callback to call when sync is crashed.                         |
 | **pathPrefix**        | String   | The prefix path for use in server for sync upfiles, default empty. |
 | **port**              | Number   | The server port, default 9000                                      |
 | **host**              | String   | The prefix path, default empty                                     |
+
+#### Event types
+
+| Type            | Description                       |
+|-----------------|-----------------------------------|
+| **ADD_DIR**     | Runs when a directory is added.   |
+| **ADD_FILE**    | It runs when they add a new file. |
+| **REMOVE_DIR**  | Runs when a directory is deleted. |
+| **REMOVE_FILE** | Runs when a file is deleted.      |
+| **CHANGE**      | Runs when a file changes.         |
+|                 |                                   |
 
 #### Close function
 
