@@ -12,16 +12,24 @@ import fs from "fs";
     function (eventType: EventWatch, pathChanged: string) {
       console.log("Succes sync: Aqui el client hace algo");
       console.log(eventType, pathChanged);
+
       // Prueba de sincronización
       (async () => {
-        if (fs.existsSync(pathChanged) && !fs.statSync(pathChanged).isDirectory) {
-          const decryptedFile = await decryptFile(`/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal${pathChanged}`);
-          console.log("Nuevo contenido: ", decryptedFile.toString());
-        } else {
-          console.log(`${pathChanged} not exist`);
+
+        const isDirectory = fs.statSync(pathChanged).isDirectory()
+        const exist = fs.existsSync(pathChanged)
+        
+        console.log("Exist ?: ", exist);
+        console.log("Is directory ?: ", isDirectory);
+
+        if(!isDirectory && exist){
+          const buffer = fs.readFileSync(pathChanged)
+          console.log(buffer.toString());
         }
+        
       })();
     },
+    
     function (error: any) {
       console.log("Sync error: ", error);
     },

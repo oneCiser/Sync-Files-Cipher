@@ -42,7 +42,6 @@ exports.__esModule = true;
 var _1 = require(".");
 var pathBckToCifrados = "/tmp/Cifrados/backup.txt";
 var clientPath = "/tmp/client";
-var encrypt_1 = require("./src/utils/encrypt");
 var fs_1 = __importDefault(require("fs"));
 // Simulación con sockets
 (function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -55,21 +54,17 @@ var fs_1 = __importDefault(require("fs"));
                     console.log(eventType, pathChanged);
                     // Prueba de sincronización
                     (function () { return __awaiter(_this, void 0, void 0, function () {
-                        var decryptedFile;
+                        var isDirectory, exist, buffer;
                         return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0:
-                                    if (!(fs_1["default"].existsSync(pathChanged) && !fs_1["default"].statSync(pathChanged).isDirectory)) return [3 /*break*/, 2];
-                                    return [4 /*yield*/, encrypt_1.decryptFile("/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal" + pathChanged)];
-                                case 1:
-                                    decryptedFile = _a.sent();
-                                    console.log("Nuevo contenido: ", decryptedFile.toString());
-                                    return [3 /*break*/, 3];
-                                case 2:
-                                    console.log(pathChanged + " not exist");
-                                    _a.label = 3;
-                                case 3: return [2 /*return*/];
+                            isDirectory = fs_1["default"].statSync(pathChanged).isDirectory();
+                            exist = fs_1["default"].existsSync(pathChanged);
+                            console.log("Exist ?: ", exist);
+                            console.log("Is directory ?: ", isDirectory);
+                            if (!isDirectory && exist) {
+                                buffer = fs_1["default"].readFileSync(pathChanged);
+                                console.log(buffer.toString());
                             }
+                            return [2 /*return*/];
                         });
                     }); })();
                 }, function (error) {
