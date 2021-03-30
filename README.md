@@ -106,7 +106,7 @@ watcherInstance.close()
 
 ## 🤝 Contributing
 
-Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/oneCiser/Web-Sync-Files-Cipher/issues)).
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/oneCiser/Web-Sync-Files-Cipher/issues).
 
 ## Show your support
 
