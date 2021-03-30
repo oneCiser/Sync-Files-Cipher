@@ -1,7 +1,7 @@
 {
   "name": "Web-Sync-Files-Cipher",
   "version": "1.0.0",
-  "description": "",
+  "description": "One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (WSFC) ",
   "main": "index.js",
   "scripts": {
     "tsc": "tsc --watch",
@@ -14,17 +14,19 @@
     "url": "git+https://github.com/oneCiser/Web-Sync-Files-Cipher.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Juan Francisco Perez Rivero, Deiver Guerra Carrascal",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/oneCiser/Web-Sync-Files-Cipher/issues"
   },
   "homepage": "https://github.com/oneCiser/Web-Sync-Files-Cipher#readme",
   "devDependencies": {
+    "@types/chokidar": "^2.1.3",
     "@types/node": "^14.14.37",
     "nodemon": "^2.0.7"
   },
   "dependencies": {
+    "chokidar": "^3.5.1",
     "typescript": "^4.2.3"
   }
 }

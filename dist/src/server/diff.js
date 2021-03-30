@@ -61,7 +61,9 @@ var syncFile = function (arrayChanges, path, fileClientSize, chunkSize) {
         var backUpBuffer, tmpBuffer, chunks, i, start, end, subBuffer, subBuffer;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, encrypt_2.decryptFile(path)];
+                case 0:
+                    console.log("Decrypting and sync file encrypted: ", path);
+                    return [4 /*yield*/, encrypt_2.decryptFile(path)];
                 case 1:
                     backUpBuffer = _a.sent();
                     tmpBuffer = [];

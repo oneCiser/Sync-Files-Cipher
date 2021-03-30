@@ -39,86 +39,155 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
+exports.createServer = void 0;
 var net_1 = __importDefault(require("net"));
+var fs_1 = __importDefault(require("fs"));
 var types_1 = require("../types");
 var rolling_1 = require("../utils/rolling");
 var diff_1 = require("./diff");
-var PORT = process.argv[3] || '9000';
-// create a server
-var SERVER = net_1["default"].createServer(function (socket) {
-    // echo
-    var buffersChanged = {};
-    var buffersChangedSize = 0;
-    var fileClientSize = 0;
-    socket.on('data', function (data) {
-        return __awaiter(this, void 0, void 0, function () {
-            var req, serverRolling, changesChunks, res, res, res, res, res;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        req = JSON.parse(data.toString());
-                        if (!(req.action == types_1.Action.COMPARE_ROLLINGS)) return [3 /*break*/, 3];
-                        console.log('COMPARE_ROLLINGS');
-                        fileClientSize = req.fileSize;
-                        return [4 /*yield*/, rolling_1.getRollingHashes('../../tmp/Cifrados/backup.png')];
-                    case 1:
-                        serverRolling = _a.sent();
-                        return [4 /*yield*/, rolling_1.compareRolling(req.rollingHashes, serverRolling)];
-                    case 2:
-                        changesChunks = _a.sent();
-                        res = {
-                            action: types_1.Action.PREPARE_STREAM,
-                            changesChunks: changesChunks
-                        };
-                        socket.write(JSON.stringify(res));
-                        return [3 /*break*/, 7];
-                    case 3:
-                        if (!(req.action == types_1.Action.STREAM_START)) return [3 /*break*/, 4];
-                        console.log('STREAM_START');
-                        if (req.size == 0) {
+var encrypt_1 = require("../utils/encrypt");
+/**
+ * Create a socket server
+ *
+ * @param {() => void} onLIstenCallback The callback when server is listening
+ * @param {number} [port=9000] The port, default 9000
+ * @return {net.Server}  The server as instance of net.Server
+ */
+var createServer = function (onLIstenCallback, port) {
+    if (port === void 0) { port = 9000; }
+    var SERVER = net_1["default"].createServer(function (socket) {
+        // contains the chunks changed
+        var buffersChanged = {};
+        // the size of chunks changed
+        var buffersChangedSize = 0;
+        // the sise from client file
+        var fileClientSize = 0;
+        // receive data from client
+        socket.on("data", function (data) {
+            return __awaiter(this, void 0, void 0, function () {
+                var req, serverRolling, changesChunks, res, res, res, res, res, res, res, res, res, error_1, res;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            _a.trys.push([0, 15, , 16]);
+                            req = JSON.parse(data.toString());
+                            if (!(req.action == types_1.Action.COMPARE_ROLLINGS)) return [3 /*break*/, 3];
+                            fileClientSize = req.fileSize;
+                            return [4 /*yield*/, rolling_1.getRollingHashes(req.path)];
+                        case 1:
+                            serverRolling = _a.sent();
+                            return [4 /*yield*/, rolling_1.compareRolling(req.rollingHashes, serverRolling)];
+                        case 2:
+                            changesChunks = _a.sent();
+                            res = {
+                                action: types_1.Action.PREPARE_STREAM,
+                                changesChunks: changesChunks
+                            };
+                            socket.write(JSON.stringify(res));
+                            return [3 /*break*/, 14];
+                        case 3:
+                            if (!(req.action == types_1.Action.STREAM_START)) return [3 /*break*/, 4];
+                            if (req.size == 0) { // not have changes
+                                res = {
+                                    action: types_1.Action.CLOSE_CONNECTION
+                                };
+                                socket.write(JSON.stringify(res));
+                            }
+                            else { // Ask for the first chunk changed
+                                buffersChangedSize = req.size;
+                                res = {
+                                    action: types_1.Action.STREAM_BUFFERS,
+                                    index: 0
+                                };
+                                socket.write(JSON.stringify(res));
+                            }
+                            return [3 /*break*/, 14];
+                        case 4:
+                            if (!(req.action == types_1.Action.STREAM_BUFFERS)) return [3 /*break*/, 8];
+                            if (!(req.index < buffersChangedSize - 1)) return [3 /*break*/, 5];
+                            res = {
+                                index: req.index + 1,
+                                action: types_1.Action.STREAM_BUFFERS
+                            };
+                            buffersChanged[req.start] = req.buffer64;
+                            socket.write(JSON.stringify(res));
+                            return [3 /*break*/, 7];
+                        case 5:
+                            buffersChanged[req.start] = req.buffer64;
+                            res = {
+                                action: types_1.Action.CLOSE_CONNECTION
+                            };
+                            return [4 /*yield*/, diff_1.syncFile(buffersChanged, req.path, fileClientSize)];
+                        case 6:
+                            _a.sent();
+                            socket.write(JSON.stringify(res));
+                            _a.label = 7;
+                        case 7: return [3 /*break*/, 14];
+                        case 8:
+                            if (!(req.action == types_1.Action.REMOVE_FILE)) return [3 /*break*/, 9];
+                            // Remove file
+                            if (fs_1["default"].existsSync(req.path)) {
+                                fs_1["default"].unlinkSync(req.path);
+                            }
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION
                             };
                             socket.write(JSON.stringify(res));
-                        }
-                        else {
-                            buffersChangedSize = req.size;
+                            return [3 /*break*/, 14];
+                        case 9:
+                            if (!(req.action == types_1.Action.REMOVE_DIR)) return [3 /*break*/, 10];
+                            // Remove dir
+                            fs_1["default"].rmdirSync(req.path, { recursive: true });
                             res = {
-                                action: types_1.Action.STREAM_BUFFERS,
-                                index: 0
+                                action: types_1.Action.CLOSE_CONNECTION
                             };
                             socket.write(JSON.stringify(res));
-                        }
-                        return [3 /*break*/, 7];
-                    case 4:
-                        if (!(req.action == types_1.Action.STREAM_BUFFERS)) return [3 /*break*/, 7];
-                        console.log('STREAM_BUFFERS');
-                        if (!(req.index < buffersChangedSize - 1)) return [3 /*break*/, 5];
-                        res = {
-                            index: req.index + 1,
-                            action: types_1.Action.STREAM_BUFFERS
-                        };
-                        buffersChanged[req.start] = req.buffer64;
-                        socket.write(JSON.stringify(res));
-                        return [3 /*break*/, 7];
-                    case 5:
-                        console.log('End');
-                        buffersChanged[req.start] = req.buffer64;
-                        res = {
-                            action: types_1.Action.CLOSE_CONNECTION
-                        };
-                        return [4 /*yield*/, diff_1.syncFile(buffersChanged, '../../tmp/Cifrados/backup.png', fileClientSize)];
-                    case 6:
-                        _a.sent();
-                        socket.write(JSON.stringify(res));
-                        _a.label = 7;
-                    case 7: return [2 /*return*/];
-                }
+                            return [3 /*break*/, 14];
+                        case 10:
+                            if (!(req.action == types_1.Action.ADD_FILE)) return [3 /*break*/, 12];
+                            // Encryp and save file
+                            return [4 /*yield*/, encrypt_1.encryptAndSaveFile(Buffer.from(req.file, 'base64'), req.path)];
+                        case 11:
+                            // Encryp and save file
+                            _a.sent();
+                            res = {
+                                action: types_1.Action.CLOSE_CONNECTION
+                            };
+                            socket.write(JSON.stringify(res));
+                            return [3 /*break*/, 14];
+                        case 12:
+                            if (!(req.action == types_1.Action.ADD_DIR)) return [3 /*break*/, 14];
+                            // Save dir
+                            return [4 /*yield*/, fs_1["default"].mkdirSync(req.path, { recursive: true })];
+                        case 13:
+                            // Save dir
+                            _a.sent();
+                            res = {
+                                action: types_1.Action.CLOSE_CONNECTION
+                            };
+                            socket.write(JSON.stringify(res));
+                            _a.label = 14;
+                        case 14: return [3 /*break*/, 16];
+                        case 15:
+                            error_1 = _a.sent();
+                            console.log("** Server error **");
+                            res = {
+                                action: types_1.Action.ERROR,
+                                message: error_1.message
+                            };
+                            socket.write(JSON.stringify(res));
+                            return [3 /*break*/, 16];
+                        case 16: return [2 /*return*/];
+                    }
+                });
             });
         });
     });
-});
-// listen
-SERVER.listen(parseInt(PORT), function () {
-    console.log("Socket on port:", PORT);
-});
+    // listen and call user callback
+    SERVER.listen(port, function () {
+        if (onLIstenCallback)
+            onLIstenCallback();
+    });
+    return SERVER;
+};
+exports.createServer = createServer;
