@@ -48,6 +48,7 @@ var diff_1 = require("./diff");
 var watch_1 = require("./watch");
 var types_2 = require("../types");
 var path_1 = __importDefault(require("path"));
+var logger_1 = require("../utils/logger");
 /**
  * Join paths client with prefix server path
  *
@@ -66,7 +67,7 @@ var joinPath = function (serverPrefix, clientPath) {
  */
 var onConnectError = function (socket, userErrorCallback) {
     socket.on("error", function (error) {
-        userErrorCallback('Connection error: ' + error.message);
+        userErrorCallback('❌ Connection error: ' + error.message);
     });
 };
 /**
@@ -85,7 +86,7 @@ var socketCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userW
             return __generator(this, function (_a) {
                 res = JSON.parse(data.toString("utf-8"));
                 //Show action executed
-                console.log("The path: " + pathChanged + " arised: " + eventType);
+                logger_1.logger.info("The path: " + pathChanged + " arised: " + eventType);
                 if (res.action == types_1.Action.CLOSE_CONNECTION) {
                     wSFCClientSocketInstance.closeConnection();
                     userWatchCallback(res.action_successful, pathChanged);
@@ -100,6 +101,17 @@ var socketCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userW
         });
     });
 };
+/**
+ * Set common handles sync
+ *
+ * @param {net.Socket} wsfcSocket The socket for listen data
+ * @param {Function} userWatchCallback The callback to call when sync finish: (event, type) => {}
+ * @param {Function} userErrorCallback The callback to call when sync crash: (error) => {}
+ * @param {string} pathChanged The path of file or directory changed
+ * @param {any} buffersChanged The buffer to change
+ * @param {string} pathPrefix The path prefix of server's side
+ * @param {string} folderToSync The path of only folder to sync
+ */
 var syncCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync) {
     wsfcSocket.on("data", function (data) {
         return __awaiter(this, void 0, void 0, function () {

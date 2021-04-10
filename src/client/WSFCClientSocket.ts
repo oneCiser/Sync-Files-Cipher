@@ -1,4 +1,5 @@
 import net from "net";
+import { logger } from "../utils/logger";
 
 /**
  * Class for managament client connection
@@ -91,7 +92,7 @@ export default class WSFCClientSocket {
       this.socket.removeAllListeners("error");
       this.socket.destroy();
       this.socket = null;
-      console.log("Connection close");
+      logger.info("Connection close")
     } else {
       throw new Error("Socket not exist");
     }

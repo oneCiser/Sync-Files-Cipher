@@ -1,4 +1,5 @@
 import chokidar from 'chokidar';
+import { logger } from '../utils/logger';
 import { EventWatch } from '../types'
 
 
@@ -10,8 +11,7 @@ import { EventWatch } from '../types'
  * @return {FSWatcher} The watcher
  */
 export const watch = (path: string, handler: Function) => {
-    console.log("Watching: ", path);
-    
+    logger.info("Watching: " + path);
     return chokidar.watch(path).on('all', (event, path) => {
         
         let eventType: string = '';

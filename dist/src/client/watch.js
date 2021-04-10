@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 exports.watch = void 0;
 var chokidar_1 = __importDefault(require("chokidar"));
+var logger_1 = require("../utils/logger");
 var types_1 = require("../types");
 /**
  *
@@ -14,7 +15,7 @@ var types_1 = require("../types");
  * @return {FSWatcher} The watcher
  */
 var watch = function (path, handler) {
-    console.log("Watching: ", path);
+    logger_1.logger.info("Watching: " + path);
     return chokidar_1["default"].watch(path).on('all', function (event, path) {
         var eventType = '';
         if (event === 'add')

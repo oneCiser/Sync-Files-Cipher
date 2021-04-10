@@ -46,6 +46,7 @@ var types_1 = require("../types");
 var rolling_1 = require("../utils/rolling");
 var diff_1 = require("./diff");
 var encrypt_1 = require("../utils/encrypt");
+var logger_1 = require("../utils/logger");
 /**
  * Create a socket server
  *
@@ -89,14 +90,15 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                             return [3 /*break*/, 20];
                         case 3:
                             if (!(req.action == types_1.Action.STREAM_START)) return [3 /*break*/, 4];
-                            if (req.size == 0) { // not have changes
+                            if (req.size == 0) {
                                 res = {
                                     action: types_1.Action.CLOSE_CONNECTION,
                                     action_successful: types_1.EventWatch.CHANGE
                                 };
                                 socket.write(JSON.stringify(res));
                             }
-                            else { // Ask for the first chunk changed
+                            else {
+                                // Ask for the first chunk changed
                                 buffersChangedSize = req.size;
                                 res = {
                                     action: types_1.Action.STREAM_BUFFERS,
@@ -108,7 +110,6 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                         case 4:
                             if (!(req.action == types_1.Action.STREAM_BUFFERS)) return [3 /*break*/, 8];
                             if (!(req.index < buffersChangedSize - 1)) return [3 /*break*/, 5];
-                            console.log('Stream buffers');
                             res = {
                                 index: req.index + 1,
                                 action: types_1.Action.STREAM_BUFFERS
@@ -117,7 +118,7 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                             socket.write(JSON.stringify(res));
                             return [3 /*break*/, 7];
                         case 5:
-                            console.log('End chunks');
+                            // If finish received chunks
                             buffersChanged[req.start] = req.buffer64;
                             res = {
                                 action: types_1.Action.CLOSE_CONNECTION,
@@ -132,7 +133,6 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                         case 8:
                             if (!(req.action == types_1.Action.REMOVE_FILE)) return [3 /*break*/, 9];
                             // Remove file
-                            console.log('Remove file: ', req.path);
                             if (fs_1["default"].existsSync(req.path)) {
                                 fs_1["default"].unlinkSync(req.path);
                             }
@@ -144,7 +144,6 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                             return [3 /*break*/, 20];
                         case 9:
                             if (!(req.action == types_1.Action.REMOVE_DIR)) return [3 /*break*/, 10];
-                            console.log('Remove dir: ', req.path);
                             // Remove dir
                             if (fs_1["default"].existsSync(req.path)) {
                                 fs_1["default"].rmdirSync(req.path, { recursive: true });
@@ -157,7 +156,7 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                             return [3 /*break*/, 20];
                         case 10:
                             if (!(req.action == types_1.Action.ADD_FILE)) return [3 /*break*/, 17];
-                            fileClient = Buffer.from(req.file, 'base64');
+                            fileClient = Buffer.from(req.file, "base64");
                             if (!!fs_1["default"].existsSync(req.path)) return [3 /*break*/, 12];
                             return [4 /*yield*/, encrypt_1.encryptAndSaveFile(fileClient, req.path, aesKey, iv)];
                         case 11:
@@ -203,7 +202,8 @@ var createServer = function (aesKey, iv, onLIstenCallback, port) {
                         case 20: return [3 /*break*/, 22];
                         case 21:
                             error_1 = _a.sent();
-                            console.log("** Server error **");
+                            // Aplicaction cras
+                            logger_1.logger.error("\u274C Server error: " + error_1.message);
                             res = {
                                 action: types_1.Action.ERROR,
                                 message: error_1.message

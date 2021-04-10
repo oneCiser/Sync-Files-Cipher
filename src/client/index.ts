@@ -7,6 +7,7 @@ import { watch } from "./watch";
 import { EventWatch } from "../types";
 import net from "net";
 import path from 'path'
+import { logger } from '../utils/logger'
 
 
 /**
@@ -27,7 +28,7 @@ const joinPath = (serverPrefix: string, clientPath: string): string => {
  */
 const onConnectError = (socket:net.Socket, userErrorCallback: (error: any) => void) => {
   socket.on("error", function (error: any) {
-    userErrorCallback('Connection error: ' + error.message);
+    userErrorCallback('❌ Connection error: ' + error.message);
   });
 }
 
@@ -54,9 +55,7 @@ const socketCommonHandlers = (
     
     //Show action executed
     
-    console.log(`The path: ${pathChanged} arised: ${eventType}`);
-      
-    
+    logger.info(`The path: ${pathChanged} arised: ${eventType}`);
 
     if (res.action == Action.CLOSE_CONNECTION) {
       wSFCClientSocketInstance.closeConnection();

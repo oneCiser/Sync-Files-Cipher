@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 var net_1 = __importDefault(require("net"));
+var logger_1 = require("../utils/logger");
 /**
  * Class for managament client connection
  * @export
@@ -74,7 +75,7 @@ var WSFCClientSocket = /** @class */ (function () {
             this.socket.removeAllListeners("error");
             this.socket.destroy();
             this.socket = null;
-            console.log("Connection close");
+            logger_1.logger.info("Connection close");
         }
         else {
             throw new Error("Socket not exist");
