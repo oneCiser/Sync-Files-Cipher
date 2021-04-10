@@ -1,6 +1,6 @@
 {
   "name": "sync-files-cipher",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "One-way encrypted client-server file synchronization (mirroring) package in nodejs over web sockets (SFC)",
   "main": "dist/index.js",
   "scripts": {
