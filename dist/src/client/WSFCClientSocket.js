@@ -25,10 +25,6 @@ var WSFCClientSocket = /** @class */ (function () {
      */
     WSFCClientSocket.prototype.handles = function () {
         this.socket.on("connect", function () {
-            console.log("Connect with socket sussfull");
-        });
-        this.socket.on("error", function (error) {
-            console.log("Conection error: ", error);
         });
     };
     /**

@@ -1,6 +1,6 @@
 import { sync } from ".";
 import { EventWatch } from "./src/types";
-const clientPath = "/tmp/client";
+const clientPath = "D:/yo/U/Proyecto/Servers/syncProyect/dist/tmp/client";
 import { decryptFile } from "./src/utils/encrypt";
 import fs from "fs";
 
@@ -13,28 +13,28 @@ import fs from "fs";
       console.log(eventType, pathChanged);
 
       // Prueba de sincronización
-      (async () => {
+      // (async () => {
 
-        const isDirectory = fs.statSync(pathChanged).isDirectory()
-        const exist = fs.existsSync(pathChanged)
+      //   const isDirectory = fs.statSync(pathChanged).isDirectory()
+      //   const exist = fs.existsSync(pathChanged)
         
-        console.log("Exist ?: ", exist);
-        console.log("Is directory ?: ", isDirectory);
+      //   console.log("Exist ?: ", exist);
+      //   console.log("Is directory ?: ", isDirectory);
 
-        if(!isDirectory && exist){
-          const buffer = await decryptFile(`/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal${pathChanged}`,
-          '8BZ3pCTp71LX5I//QsBYdz7w4JHXNVehSBXuXnScdqg=',
-          'AAAAAAAAAAAAAAAAAAAAAA==')
-          console.log(buffer.toString());
-        }
+      //   if(!isDirectory && exist){
+      //     const buffer = await decryptFile(`/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal${pathChanged}`,
+      //     '8BZ3pCTp71LX5I//QsBYdz7w4JHXNVehSBXuXnScdqg=',
+      //     'AAAAAAAAAAAAAAAAAAAAAA==')
+      //     console.log(buffer.toString());
+      //   }
         
-      })();
+      // })();
     },
     
     function (error: any) {
       console.log("Sync error: ", error);
     },
-    '/home/ingdeiver/streams-for-lab.co/deiver-guerra-carrascal'
+    './tmp/server'
   );
 
   // simula close

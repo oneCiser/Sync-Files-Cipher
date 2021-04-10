@@ -27,7 +27,7 @@ var watch = function (path, handler) {
             eventType = types_1.EventWatch.REMOVE_FILE;
         else if (event === 'change')
             eventType = types_1.EventWatch.CHANGE;
-        handler(eventType, path);
+        handler(eventType, path.replace(/\\/g, '/'));
     });
 };
 exports.watch = watch;

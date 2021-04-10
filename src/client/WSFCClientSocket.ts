@@ -25,12 +25,9 @@ export default class WSFCClientSocket {
    */
   private handles() {
     this.socket.on("connect", function () {
-      console.log("Connect with socket sussfull");
     });
 
-    this.socket.on("error", function (error: any) {
-      console.log("Conection error: ", error);
-    });
+    
   }
 
 

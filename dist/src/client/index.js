@@ -59,6 +59,17 @@ var joinPath = function (serverPrefix, clientPath) {
     return path_1["default"].join(serverPrefix, clientPath);
 };
 /**
+ * Listen the connection error's socket
+ * @param {net.Socket} socket The socket
+ * @param {Function} userErrorCallback The callback to call when sync crash: (error) => {}
+ * @param userErrorCallback
+ */
+var onConnectError = function (socket, userErrorCallback) {
+    socket.on("error", function (error) {
+        userErrorCallback('Connection error: ' + error.message);
+    });
+};
+/**
  * Set common actions
  *
  * @param {net.Socket} wsfcSocket The socket for listen data
@@ -73,9 +84,11 @@ var socketCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userW
             var res;
             return __generator(this, function (_a) {
                 res = JSON.parse(data.toString("utf-8"));
+                //Show action executed
+                console.log("The path: " + pathChanged + " arised: " + eventType);
                 if (res.action == types_1.Action.CLOSE_CONNECTION) {
                     wSFCClientSocketInstance.closeConnection();
-                    userWatchCallback(eventType, pathChanged);
+                    userWatchCallback(res.action_successful, pathChanged);
                     // If exist error call user error callback
                 }
                 else if (res.action == types_1.Action.ERROR) {
@@ -83,6 +96,56 @@ var socketCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userW
                     userErrorCallback(new Error(res.message));
                 }
                 return [2 /*return*/];
+            });
+        });
+    });
+};
+var syncCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync) {
+    wsfcSocket.on("data", function (data) {
+        return __awaiter(this, void 0, void 0, function () {
+            var res, bufferFile, req, req;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        res = JSON.parse(data.toString("utf-8"));
+                        if (!(res.action == types_1.Action.PREPARE_STREAM)) return [3 /*break*/, 2];
+                        bufferFile = fs_1["default"].readFileSync(pathChanged);
+                        return [4 /*yield*/, diff_1.getChanges(res.changesChunks, bufferFile)];
+                    case 1:
+                        // The chunks changed
+                        buffersChanged = _a.sent();
+                        req = {
+                            action: types_1.Action.STREAM_START,
+                            size: buffersChanged.length
+                        };
+                        wsfcSocket.write(JSON.stringify(req));
+                        return [3 /*break*/, 3];
+                    case 2:
+                        if (res.action == types_1.Action.STREAM_BUFFERS) {
+                            req = {
+                                action: types_1.Action.STREAM_BUFFERS,
+                                start: buffersChanged[res.index].start,
+                                buffer64: buffersChanged[res.index].buffer64,
+                                index: res.index,
+                                path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/')
+                            };
+                            wsfcSocket.write(JSON.stringify(req));
+                            // close connection and call user callback
+                        }
+                        else if (res.action == types_1.Action.CLOSE_CONNECTION) {
+                            wSFCClientSocketInstance.closeConnection();
+                            // when finish call user callback
+                            userWatchCallback(res.action_successful, pathChanged);
+                            // If exist error call user error callback
+                        }
+                        else if (res.action == types_1.Action.ERROR) {
+                            wSFCClientSocketInstance.closeConnection();
+                            // when finish call user callback
+                            userErrorCallback(new Error(res.message));
+                        }
+                        _a.label = 3;
+                    case 3: return [2 /*return*/];
+                }
             });
         });
     });
@@ -106,15 +169,16 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
         var watcher;
         return __generator(this, function (_a) {
             watcher = watch_1.watch(pathToWatch, function (eventType, pathChanged) { return __awaiter(void 0, void 0, void 0, function () {
-                var wSFCClientSocketInstance_1, wsfcSocket_1, fileClient, rollingHashes, buffersChanged, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, newFile, req, wSFCClientSocketInstance, wsfcSocket, req, error_1;
+                var folderToSync, wSFCClientSocketInstance, wsfcSocket, fileClient, rollingHashes, buffersChanged, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, newFile, req, buffersChanged, wSFCClientSocketInstance, wsfcSocket, req, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             _a.trys.push([0, 4, , 5]);
+                            folderToSync = pathChanged.replace(pathToWatch, '');
                             if (!(eventType === types_2.EventWatch.CHANGE)) return [3 /*break*/, 2];
-                            console.log("The file " + pathChanged + " changed");
-                            wSFCClientSocketInstance_1 = new WSFCClientSocket_1["default"]();
-                            wsfcSocket_1 = wSFCClientSocketInstance_1.getConnect(port, host);
+                            wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
+                            wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+                            onConnectError(wsfcSocket, userErrorCallback);
                             fileClient = fs_1["default"].readFileSync(pathChanged);
                             return [4 /*yield*/, rolling_1.getRollingHashes(pathChanged)];
                         case 1:
@@ -123,69 +187,22 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
                             req = JSON.stringify({
                                 rollingHashes: rollingHashes,
                                 action: types_1.Action.COMPARE_ROLLINGS,
-                                path: joinPath(pathPrefix, pathChanged),
+                                path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
                                 fileSize: fileClient.length
                             });
                             // make first request to server
-                            wsfcSocket_1.write(req);
+                            wsfcSocket.write(req);
                             // listen response from server and make new requests
-                            wsfcSocket_1.on("data", function (data) {
-                                return __awaiter(this, void 0, void 0, function () {
-                                    var res, bufferFile, req_1, req_2;
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                res = JSON.parse(data.toString("utf-8"));
-                                                if (!(res.action == types_1.Action.PREPARE_STREAM)) return [3 /*break*/, 2];
-                                                bufferFile = fs_1["default"].readFileSync(pathChanged);
-                                                return [4 /*yield*/, diff_1.getChanges(res.changesChunks, bufferFile)];
-                                            case 1:
-                                                // The chunks changed
-                                                buffersChanged = _a.sent();
-                                                req_1 = {
-                                                    action: types_1.Action.STREAM_START,
-                                                    size: buffersChanged.length
-                                                };
-                                                wsfcSocket_1.write(JSON.stringify(req_1));
-                                                return [3 /*break*/, 3];
-                                            case 2:
-                                                if (res.action == types_1.Action.STREAM_BUFFERS) {
-                                                    req_2 = {
-                                                        action: types_1.Action.STREAM_BUFFERS,
-                                                        start: buffersChanged[res.index].start,
-                                                        buffer64: buffersChanged[res.index].buffer64,
-                                                        index: res.index,
-                                                        path: joinPath(pathPrefix, pathChanged)
-                                                    };
-                                                    wsfcSocket_1.write(JSON.stringify(req_2));
-                                                    // close connection and call user callback
-                                                }
-                                                else if (res.action == types_1.Action.CLOSE_CONNECTION) {
-                                                    wSFCClientSocketInstance_1.closeConnection();
-                                                    // when finish call user callback
-                                                    userWatchCallback(eventType, pathChanged);
-                                                    // If exist error call user error callback
-                                                }
-                                                else if (res.action == types_1.Action.ERROR) {
-                                                    wSFCClientSocketInstance_1.closeConnection();
-                                                    // when finish call user callback
-                                                    userErrorCallback(new Error(res.message));
-                                                }
-                                                _a.label = 3;
-                                            case 3: return [2 /*return*/];
-                                        }
-                                    });
-                                });
-                            });
+                            syncCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync);
                             return [3 /*break*/, 3];
                         case 2:
                             if (eventType === types_2.EventWatch.REMOVE_FILE) {
-                                console.log("The file " + pathChanged + " was removed");
                                 wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
                                 wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+                                onConnectError(wsfcSocket, userErrorCallback);
                                 req = JSON.stringify({
                                     action: types_1.Action.REMOVE_FILE,
-                                    path: joinPath(pathPrefix, pathChanged)
+                                    path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/')
                                 });
                                 wsfcSocket.write(req);
                                 // common hanlders for current socket data
@@ -193,12 +210,12 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
                             }
                             // if remove a directory
                             else if (eventType === types_2.EventWatch.REMOVE_DIR) {
-                                console.log("The dir " + pathChanged + " was removed");
                                 wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
                                 wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+                                onConnectError(wsfcSocket, userErrorCallback);
                                 req = JSON.stringify({
                                     action: types_1.Action.REMOVE_DIR,
-                                    path: joinPath(pathPrefix, pathChanged)
+                                    path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/')
                                 });
                                 wsfcSocket.write(req);
                                 // common hanlders for current socket data
@@ -206,27 +223,27 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
                             }
                             // if add file
                             else if (eventType === types_2.EventWatch.ADD_FILE) {
-                                console.log("The file " + pathChanged + " was added");
                                 wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
                                 wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+                                onConnectError(wsfcSocket, userErrorCallback);
                                 newFile = fs_1["default"].readFileSync(pathChanged);
                                 req = JSON.stringify({
                                     action: types_1.Action.ADD_FILE,
-                                    path: joinPath(pathPrefix, pathChanged),
+                                    path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
                                     file: newFile.toString('base64')
                                 });
                                 wsfcSocket.write(req);
-                                // common hanlders for current socket data
-                                socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged);
+                                buffersChanged = null;
+                                syncCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync);
                             }
                             // if add directory
                             else if (eventType === types_2.EventWatch.ADD_DIR) {
-                                console.log("The dir " + pathChanged + " was added");
                                 wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
                                 wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+                                onConnectError(wsfcSocket, userErrorCallback);
                                 req = JSON.stringify({
                                     action: types_1.Action.ADD_DIR,
-                                    path: joinPath(pathPrefix, pathChanged)
+                                    path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/')
                                 });
                                 wsfcSocket.write(req);
                                 // common hanlders for current socket data

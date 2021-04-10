@@ -22,7 +22,7 @@ export const watch = (path: string, handler: Function) => {
         else if(event === 'unlink') eventType = EventWatch.REMOVE_FILE
         else if(event === 'change') eventType = EventWatch.CHANGE
         
-        handler(eventType, path)
+        handler(eventType, path.replace(/\\/g, '/'))
     });
 }
 

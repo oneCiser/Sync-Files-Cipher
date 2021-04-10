@@ -19,6 +19,18 @@ import path from 'path'
 const joinPath = (serverPrefix: string, clientPath: string): string => {
   return path.join(serverPrefix, clientPath)
 }
+/**
+ * Listen the connection error's socket
+ * @param {net.Socket} socket The socket
+ * @param {Function} userErrorCallback The callback to call when sync crash: (error) => {}
+ * @param userErrorCallback 
+ */
+const onConnectError = (socket:net.Socket, userErrorCallback: (error: any) => void) => {
+  socket.on("error", function (error: any) {
+    userErrorCallback('Connection error: ' + error.message);
+  });
+}
+
 
 /**
  * Set common actions
@@ -39,10 +51,16 @@ const socketCommonHandlers = (
 ) => {
   wsfcSocket.on("data", async function (data: any) {
     const res = JSON.parse(data.toString("utf-8"));
+    
+    //Show action executed
+    
+    console.log(`The path: ${pathChanged} arised: ${eventType}`);
+      
+    
 
     if (res.action == Action.CLOSE_CONNECTION) {
       wSFCClientSocketInstance.closeConnection();
-      userWatchCallback(eventType, pathChanged);
+      userWatchCallback(res.action_successful, pathChanged);
 
       // If exist error call user error callback
     } else if (res.action == Action.ERROR) {
@@ -53,6 +71,77 @@ const socketCommonHandlers = (
 };
 
 
+/**
+ * Set common handles sync
+ *
+ * @param {net.Socket} wsfcSocket The socket for listen data
+ * @param {Function} userWatchCallback The callback to call when sync finish: (event, type) => {}
+ * @param {Function} userErrorCallback The callback to call when sync crash: (error) => {}
+ * @param {string} pathChanged The path of file or directory changed
+ * @param {any} buffersChanged The buffer to change
+ * @param {string} pathPrefix The path prefix of server's side
+ * @param {string} folderToSync The path of only folder to sync
+ */
+const syncCommonHandlers = (
+  wsfcSocket: net.Socket,
+  wSFCClientSocketInstance: any,
+  userWatchCallback: (eventType: EventWatch, pathChanged: string) => void,
+  userErrorCallback: (error: any) => void,
+  pathChanged: string,
+  buffersChanged: any,
+  pathPrefix: string,
+  folderToSync: string
+) => {
+
+  wsfcSocket.on("data", async function (data: any) {
+    const res = JSON.parse(data.toString("utf-8"));
+    
+
+    // If server detcting changes, prepare the syncronization
+    if (res.action == Action.PREPARE_STREAM) {
+      // the client file buffer
+      const bufferFile = fs.readFileSync(pathChanged);
+      // The chunks changed
+      buffersChanged = await getChanges(res.changesChunks, bufferFile);
+
+      const req = {
+        action: Action.STREAM_START, // Start the shipment of chunks
+        size: buffersChanged.length, // the size of fclient file
+      };
+      wsfcSocket.write(JSON.stringify(req));
+
+      // Receive and send chunks
+    } else if (res.action == Action.STREAM_BUFFERS) {
+      
+      
+      
+      const req = {
+        action: Action.STREAM_BUFFERS,
+        start: buffersChanged[res.index].start,
+        buffer64: buffersChanged[res.index].buffer64,
+        index: res.index,
+        path: joinPath(pathPrefix, folderToSync ).replace(/\\/g, '/'),
+      };
+
+      wsfcSocket.write(JSON.stringify(req));
+
+      // close connection and call user callback
+    } else if (res.action == Action.CLOSE_CONNECTION) {
+      wSFCClientSocketInstance.closeConnection();
+
+      // when finish call user callback
+      userWatchCallback(res.action_successful, pathChanged);
+
+      // If exist error call user error callback
+    } else if (res.action == Action.ERROR) {
+      wSFCClientSocketInstance.closeConnection();
+
+      // when finish call user callback
+      userErrorCallback(new Error(res.message));
+    }
+  });
+
+}
 
 /**
  * Sync the file client with backup files when there are changes
@@ -81,13 +170,18 @@ export const sync = async (
     
     try {
       // if the file change, start the sync
+      
+      //Only send the content of watch folder
+    
+      const folderToSync = pathChanged.replace(pathToWatch,'');
+
       if (eventType === EventWatch.CHANGE) {
-        console.log(`The file ${pathChanged} changed`);
+        
 
         // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-
+        onConnectError(wsfcSocket, userErrorCallback)
         // load file to sync
         const fileClient = fs.readFileSync(pathChanged);
         // create rollings
@@ -99,7 +193,7 @@ export const sync = async (
         const req = JSON.stringify({
           rollingHashes, // hashes from client file
           action: Action.COMPARE_ROLLINGS,
-          path: joinPath(pathPrefix, pathChanged), // path of file to sync server
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'), // path of file to sync server
           fileSize: fileClient.length, // size of client file
         });
 
@@ -107,63 +201,29 @@ export const sync = async (
         wsfcSocket.write(req);
 
         // listen response from server and make new requests
-        wsfcSocket.on("data", async function (data: any) {
-          const res = JSON.parse(data.toString("utf-8"));
-          
+        syncCommonHandlers(
+          wsfcSocket,
+          wSFCClientSocketInstance,
+          userWatchCallback,
+          userErrorCallback,
+          pathChanged,
+          buffersChanged,
+          pathPrefix,
+          folderToSync);
 
-          // If server detcting changes, prepare the syncronization
-          if (res.action == Action.PREPARE_STREAM) {
-            // the client file buffer
-            const bufferFile = fs.readFileSync(pathChanged);
-            // The chunks changed
-            buffersChanged = await getChanges(res.changesChunks, bufferFile);
-
-            const req = {
-              action: Action.STREAM_START, // Start the shipment of chunks
-              size: buffersChanged.length, // the size of fclient file
-            };
-            wsfcSocket.write(JSON.stringify(req));
-
-            // Receive and send chunks
-          } else if (res.action == Action.STREAM_BUFFERS) {
-            const req = {
-              action: Action.STREAM_BUFFERS,
-              start: buffersChanged[res.index].start,
-              buffer64: buffersChanged[res.index].buffer64,
-              index: res.index,
-              path: joinPath(pathPrefix, pathChanged),
-            };
-
-            wsfcSocket.write(JSON.stringify(req));
-
-            // close connection and call user callback
-          } else if (res.action == Action.CLOSE_CONNECTION) {
-            wSFCClientSocketInstance.closeConnection();
-
-            // when finish call user callback
-            userWatchCallback(eventType, pathChanged);
-
-            // If exist error call user error callback
-          } else if (res.action == Action.ERROR) {
-            wSFCClientSocketInstance.closeConnection();
-
-            // when finish call user callback
-            userErrorCallback(new Error(res.message));
-          }
-        });
       }
 
       // if remove a file
       else if (eventType === EventWatch.REMOVE_FILE) {
-        console.log(`The file ${pathChanged} was removed`);
+        
         // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-
+        onConnectError(wsfcSocket, userErrorCallback);
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_FILE,
-          path: joinPath(pathPrefix, pathChanged),
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
         });
         wsfcSocket.write(req);
 
@@ -175,15 +235,15 @@ export const sync = async (
 
       // if remove a directory
       else if (eventType === EventWatch.REMOVE_DIR) { 
-        console.log(`The dir ${pathChanged} was removed`);
+        
         // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-
+        onConnectError(wsfcSocket, userErrorCallback);
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_DIR,
-          path: joinPath(pathPrefix, pathChanged),
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
         });
         wsfcSocket.write(req);
 
@@ -194,35 +254,47 @@ export const sync = async (
 
       // if add file
       else if (eventType === EventWatch.ADD_FILE) { 
-        console.log(`The file ${pathChanged} was added`);
+        
         // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
+        onConnectError(wsfcSocket, userErrorCallback);
         // load new file
         const newFile = fs.readFileSync(pathChanged)
         // make a request for create backup
         const req = JSON.stringify({
           action: Action.ADD_FILE,
-          path: joinPath(pathPrefix, pathChanged),
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
           file: newFile.toString('base64')
         });
         wsfcSocket.write(req);
 
         // common hanlders for current socket data
-        socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged)
+        
+        // contains the bytes that was changed
+        var buffersChanged: any = null;
+        syncCommonHandlers(
+          wsfcSocket,
+          wSFCClientSocketInstance,
+          userWatchCallback,
+          userErrorCallback,
+          pathChanged,
+          buffersChanged,
+          pathPrefix,
+          folderToSync);
       }
 
       // if add directory
       else if (eventType === EventWatch.ADD_DIR) { 
-        console.log(`The dir ${pathChanged} was added`);
+        
         // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-
+        onConnectError(wsfcSocket, userErrorCallback);
         // make a request for create dir backup
         const req = JSON.stringify({
           action: Action.ADD_DIR,
-          path: joinPath(pathPrefix, pathChanged),
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
         });
         wsfcSocket.write(req);
 
