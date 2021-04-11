@@ -61,23 +61,30 @@ var syncFile = function (arrayChanges, path, fileClientSize, key, iv, chunkSize)
         var backUpBuffer, tmpBuffer, chunks, i, start, end, subBuffer, subBuffer;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, encrypt_2.decryptFile(path, key, iv)];
+                case 0:
+                    backUpBuffer = null;
+                    if (!fs_1["default"].existsSync(path)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, encrypt_2.decryptFile(path, key, iv)];
                 case 1:
                     backUpBuffer = _a.sent();
+                    _a.label = 2;
+                case 2:
                     tmpBuffer = [];
                     chunks = Math.ceil(fileClientSize / chunkSize) //Math.ceil(backUpBuffer.length/chunkSize);
                     ;
                     for (i = 0; i < chunks; i++) {
                         start = i * chunkSize;
                         end = (i + 1) * chunkSize;
-                        if (end >= backUpBuffer.length) {
-                            end = backUpBuffer.length;
+                        if (backUpBuffer) {
+                            if (end >= backUpBuffer.length) {
+                                end = backUpBuffer.length;
+                            }
                         }
                         if (arrayChanges[start]) {
-                            subBuffer = Buffer.from(arrayChanges[start], 'base64');
+                            subBuffer = arrayChanges[start];
                             tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
                         }
-                        else {
+                        else if (backUpBuffer) {
                             subBuffer = backUpBuffer.slice(start, end);
                             tmpBuffer = __spreadArray(__spreadArray([], tmpBuffer), subBuffer);
                         }

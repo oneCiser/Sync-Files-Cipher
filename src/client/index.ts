@@ -93,7 +93,7 @@ const syncCommonHandlers = (
 ) => {
 
   wsfcSocket.on("data", async function (data: any) {
-    const res = JSON.parse(data.toString("utf-8"));
+    const res = JSON.parse(data.toString());
     
 
     // If server detcting changes, prepare the syncronization
@@ -189,7 +189,7 @@ export const sync = async (
     
       const folderToSync = pathChanged.replace(pathToWatch,'');
 
-      if (eventType === EventWatch.CHANGE) {
+      if (eventType === EventWatch.SYNC) {
         
 
         // create a socket
@@ -266,39 +266,8 @@ export const sync = async (
       }
      
 
-      // if add file
-      else if (eventType === EventWatch.ADD_FILE) { 
-        
-        const wSFCClientSocketInstance = new WSFCClientSocket()
-        const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-        onConnectError(wsfcSocket, userErrorCallback)
-        // load file to sync
-        const fileClient = fs.readFileSync(pathChanged);
-        // create rollings
-        // contains the bytes that was changed
-        var buffersChanged: any = null;
+      
 
-        // make a request for start to compare bytes
-        const req = JSON.stringify({
-          action: Action.COMPARE_ROLLINGS,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'), // path of file to sync server
-          fileSize: fileClient.length, // size of client file
-        });
-
-        // make first request to server
-        wsfcSocket.write(req);
-
-        // listen response from server and make new requests
-        syncCommonHandlers(
-          wsfcSocket,
-          wSFCClientSocketInstance,
-          userWatchCallback,
-          userErrorCallback,
-          pathChanged,
-          buffersChanged,
-          pathPrefix,
-          folderToSync);
-      }
 
       // if add directory
       else if (eventType === EventWatch.ADD_DIR) { 

@@ -115,13 +115,14 @@ var socketCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userW
 var syncCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync) {
     wsfcSocket.on("data", function (data) {
         return __awaiter(this, void 0, void 0, function () {
-            var res, bufferFile, req, req;
+            var res, bufferFile, req, req, req;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        res = JSON.parse(data.toString("utf-8"));
-                        if (!(res.action == types_1.Action.PREPARE_STREAM)) return [3 /*break*/, 2];
+                        res = JSON.parse(data.toString());
+                        if (!(res.action == types_1.Action.PREPARE_STREAM)) return [3 /*break*/, 5];
                         bufferFile = fs_1["default"].readFileSync(pathChanged);
+                        if (!res.fileExist) return [3 /*break*/, 2];
                         return [4 /*yield*/, diff_1.getChanges(res.changesChunks, bufferFile)];
                     case 1:
                         // The chunks changed
@@ -131,8 +132,18 @@ var syncCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userWat
                             size: buffersChanged.length
                         };
                         wsfcSocket.write(JSON.stringify(req));
-                        return [3 /*break*/, 3];
-                    case 2:
+                        return [3 /*break*/, 4];
+                    case 2: return [4 /*yield*/, diff_1.getAllChunks(bufferFile)];
+                    case 3:
+                        buffersChanged = _a.sent();
+                        req = {
+                            action: types_1.Action.STREAM_START,
+                            size: buffersChanged.length
+                        };
+                        wsfcSocket.write(JSON.stringify(req));
+                        _a.label = 4;
+                    case 4: return [3 /*break*/, 6];
+                    case 5:
                         if (res.action == types_1.Action.STREAM_BUFFERS) {
                             req = {
                                 action: types_1.Action.STREAM_BUFFERS,
@@ -155,8 +166,8 @@ var syncCommonHandlers = function (wsfcSocket, wSFCClientSocketInstance, userWat
                             // when finish call user callback
                             userErrorCallback(new Error(res.message));
                         }
-                        _a.label = 3;
-                    case 3: return [2 /*return*/];
+                        _a.label = 6;
+                    case 6: return [2 /*return*/];
                 }
             });
         });
@@ -181,13 +192,13 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
         var watcher;
         return __generator(this, function (_a) {
             watcher = watch_1.watch(pathToWatch, function (eventType, pathChanged) { return __awaiter(void 0, void 0, void 0, function () {
-                var folderToSync, wSFCClientSocketInstance, wsfcSocket, fileClient, rollingHashes, buffersChanged, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, newFile, req, buffersChanged, wSFCClientSocketInstance, wsfcSocket, req, error_1;
+                var folderToSync, wSFCClientSocketInstance, wsfcSocket, fileClient, rollingHashes, buffersChanged, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, req, wSFCClientSocketInstance, wsfcSocket, req, error_1;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             _a.trys.push([0, 4, , 5]);
                             folderToSync = pathChanged.replace(pathToWatch, '');
-                            if (!(eventType === types_2.EventWatch.CHANGE)) return [3 /*break*/, 2];
+                            if (!(eventType === types_2.EventWatch.SYNC)) return [3 /*break*/, 2];
                             wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
                             wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
                             onConnectError(wsfcSocket, userErrorCallback);
@@ -232,21 +243,6 @@ var sync = function (pathToWatch, userWatchCallback, userErrorCallback, pathPref
                                 wsfcSocket.write(req);
                                 // common hanlders for current socket data
                                 socketCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, eventType, pathChanged);
-                            }
-                            // if add file
-                            else if (eventType === types_2.EventWatch.ADD_FILE) {
-                                wSFCClientSocketInstance = new WSFCClientSocket_1["default"]();
-                                wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-                                onConnectError(wsfcSocket, userErrorCallback);
-                                newFile = fs_1["default"].readFileSync(pathChanged);
-                                req = JSON.stringify({
-                                    action: types_1.Action.ADD_FILE,
-                                    path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
-                                    file: newFile.toString('base64')
-                                });
-                                wsfcSocket.write(req);
-                                buffersChanged = null;
-                                syncCommonHandlers(wsfcSocket, wSFCClientSocketInstance, userWatchCallback, userErrorCallback, pathChanged, buffersChanged, pathPrefix, folderToSync);
                             }
                             // if add directory
                             else if (eventType === types_2.EventWatch.ADD_DIR) {

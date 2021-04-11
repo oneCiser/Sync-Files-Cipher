@@ -16,10 +16,12 @@ var types_1 = require("../types");
  */
 var watch = function (path, handler) {
     logger_1.logger.info("Watching: " + path);
-    return chokidar_1["default"].watch(path).on('all', function (event, path) {
+    return chokidar_1["default"].watch(path, {
+        awaitWriteFinish: true
+    }).on('all', function (event, path) {
         var eventType = '';
         if (event === 'add')
-            eventType = types_1.EventWatch.ADD_FILE;
+            eventType = types_1.EventWatch.SYNC;
         else if (event === 'addDir')
             eventType = types_1.EventWatch.ADD_DIR;
         else if (event === 'unlinkDir')
@@ -27,7 +29,7 @@ var watch = function (path, handler) {
         else if (event === 'unlink')
             eventType = types_1.EventWatch.REMOVE_FILE;
         else if (event === 'change')
-            eventType = types_1.EventWatch.CHANGE;
+            eventType = types_1.EventWatch.SYNC;
         handler(eventType, path.replace(/\\/g, '/'));
     });
 };

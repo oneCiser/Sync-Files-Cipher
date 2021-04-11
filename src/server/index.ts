@@ -44,12 +44,14 @@ export const createServer = (
 
           //If file exist compare rollings
           if(fs.existsSync(req.path)){
+            
             const serverRolling = await getRollingHashes(req.path);
+            
             const changesChunks = await compareRolling(
               req.rollingHashes,
               serverRolling
             );
-  
+            
             const res = {
               action: Action.PREPARE_STREAM,
               changesChunks,
@@ -59,6 +61,7 @@ export const createServer = (
           }
           //else, stream all chunks
           else{
+            
             const res = {
               action: Action.PREPARE_STREAM,
               fileExist: false
@@ -75,7 +78,7 @@ export const createServer = (
             // close connection
             const res = {
               action: Action.CLOSE_CONNECTION,
-              action_successful: EventWatch.CHANGE,
+              action_successful: EventWatch.SYNC,
             };
             socket.write(JSON.stringify(res));
           } else {
@@ -105,7 +108,7 @@ export const createServer = (
             buffersChanged[req.start] = req.buffer64;
             const res = {
               action: Action.CLOSE_CONNECTION, // close connection
-              action_successful: EventWatch.CHANGE,
+              action_successful: EventWatch.SYNC,
             };
 
             await syncFile(
@@ -115,6 +118,7 @@ export const createServer = (
               aesKey,
               iv
             );
+            logger.info(`Sync file: ${req.path}`);
             socket.write(JSON.stringify(res));
           }
         }
@@ -122,6 +126,7 @@ export const createServer = (
         // if remove a file
         else if (req.action == Action.REMOVE_FILE) {
           // Remove file
+          logger.info(`Remove file: ${req.path}`);
           if (fs.existsSync(req.path)) {
             fs.unlinkSync(req.path);
           }
@@ -135,6 +140,8 @@ export const createServer = (
 
         // if remove a directory
         else if (req.action == Action.REMOVE_DIR) {
+
+          logger.info(`Remove dir: ${req.path}`);
           // Remove dir
           if (fs.existsSync(req.path)) {
             fs.rmdirSync(req.path, { recursive: true });
@@ -152,6 +159,8 @@ export const createServer = (
 
         // if add directory
         else if (req.action == Action.ADD_DIR) {
+
+          logger.info(`Add dir: ${req.path}`);
           // Save dir
           if (!fs.existsSync(req.path)) {
             await fs.mkdirSync(req.path, { recursive: true });

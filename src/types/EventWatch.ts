@@ -1,7 +1,6 @@
 export enum  EventWatch  {
+ SYNC = 'SYNC',
  ADD_DIR = 'ADD_DIR',
- ADD_FILE = 'ADD_FILE',
  REMOVE_DIR = 'REMOVE_DIR',
  REMOVE_FILE = 'REMOVE_FILE',
- CHANGE = 'CHANGE'
 }

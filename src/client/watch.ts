@@ -12,15 +12,18 @@ import { EventWatch } from '../types'
  */
 export const watch = (path: string, handler: Function) => {
     logger.info("Watching: " + path);
-    return chokidar.watch(path).on('all', (event, path) => {
+    return chokidar.watch(path,{
+        awaitWriteFinish:true,
+        
+    }).on('all', (event, path) => {
         
         let eventType: string = '';
 
-        if(event === 'add') eventType = EventWatch.ADD_FILE
+        if(event === 'add') eventType = EventWatch.SYNC
         else if(event === 'addDir') eventType = EventWatch.ADD_DIR
         else if(event === 'unlinkDir') eventType = EventWatch.REMOVE_DIR
         else if(event === 'unlink') eventType = EventWatch.REMOVE_FILE
-        else if(event === 'change') eventType = EventWatch.CHANGE
+        else if(event === 'change') eventType = EventWatch.SYNC
         
         handler(eventType, path.replace(/\\/g, '/'))
     });
