@@ -41,17 +41,31 @@ export const createServer = (
         // Copare rolling client  file with rolling server file
         if (req.action == Action.COMPARE_ROLLINGS) {
           fileClientSize = req.fileSize;
-          const serverRolling = await getRollingHashes(req.path);
-          const changesChunks = await compareRolling(
-            req.rollingHashes,
-            serverRolling
-          );
 
-          const res = {
-            action: Action.PREPARE_STREAM,
-            changesChunks,
-          };
-          socket.write(JSON.stringify(res));
+          //If file exist compare rollings
+          if(fs.existsSync(req.path)){
+            const serverRolling = await getRollingHashes(req.path);
+            const changesChunks = await compareRolling(
+              req.rollingHashes,
+              serverRolling
+            );
+  
+            const res = {
+              action: Action.PREPARE_STREAM,
+              changesChunks,
+              fileExist: true
+            };
+            socket.write(JSON.stringify(res));
+          }
+          //else, stream all chunks
+          else{
+            const res = {
+              action: Action.PREPARE_STREAM,
+              fileExist: false
+            };
+            socket.write(JSON.stringify(res));
+          }
+
 
           // start to send chunks changed
         } else if (req.action == Action.STREAM_START) {
@@ -134,31 +148,7 @@ export const createServer = (
         }
 
         // if add file
-        else if (req.action == Action.ADD_FILE) {
-          const fileClient = Buffer.from(req.file, "base64");
-          // Encryp and save file
-          if (!fs.existsSync(req.path)) {
-            await encryptAndSaveFile(fileClient, req.path, aesKey, iv);
-            const res = {
-              action: Action.CLOSE_CONNECTION, // close connection
-              action_successful: EventWatch.ADD_FILE,
-            };
-            socket.write(JSON.stringify(res));
-          } else {
-            fileClientSize = fileClient.length;
-            const serverRolling = await getRollingHashes(req.path);
-            const clientRolling = await createRollingHashs(fileClient);
-            const changesChunks = await compareRolling(
-              clientRolling,
-              serverRolling
-            );
-            const res = {
-              action: Action.PREPARE_STREAM,
-              changesChunks,
-            };
-            socket.write(JSON.stringify(res));
-          }
-        }
+
 
         // if add directory
         else if (req.action == Action.ADD_DIR) {

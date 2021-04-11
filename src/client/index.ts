@@ -2,7 +2,7 @@ import WSFCClientSocket from "./WSFCClientSocket";
 import { getRollingHashes } from "../utils/rolling";
 import { Action } from "../types";
 import fs from "fs";
-import { getChanges } from "./diff";
+import { getChanges, getAllChunks } from "./diff";
 import { watch } from "./watch";
 import { EventWatch } from "../types";
 import net from "net";
@@ -100,14 +100,29 @@ const syncCommonHandlers = (
     if (res.action == Action.PREPARE_STREAM) {
       // the client file buffer
       const bufferFile = fs.readFileSync(pathChanged);
-      // The chunks changed
-      buffersChanged = await getChanges(res.changesChunks, bufferFile);
 
-      const req = {
-        action: Action.STREAM_START, // Start the shipment of chunks
-        size: buffersChanged.length, // the size of fclient file
-      };
-      wsfcSocket.write(JSON.stringify(req));
+      //Get only the chunks changes
+      if(res.fileExist){
+        // The chunks changed
+        buffersChanged = await getChanges(res.changesChunks, bufferFile);
+
+        const req = {
+          action: Action.STREAM_START, // Start the shipment of chunks
+          size: buffersChanged.length, // the size of fclient file
+        };
+        wsfcSocket.write(JSON.stringify(req));
+      }
+      //Else, send all chunks
+      else{
+        buffersChanged = await getAllChunks(bufferFile);
+        const req = {
+          action: Action.STREAM_START, // Start the shipment of chunks
+          size: buffersChanged.length, // the size of fclient file
+        };
+        wsfcSocket.write(JSON.stringify(req));
+      }
+      
+
 
       // Receive and send chunks
     } else if (res.action == Action.STREAM_BUFFERS) {
@@ -254,24 +269,26 @@ export const sync = async (
       // if add file
       else if (eventType === EventWatch.ADD_FILE) { 
         
-        // create a socket
         const wSFCClientSocketInstance = new WSFCClientSocket()
         const wsfcSocket = wSFCClientSocketInstance.getConnect(port, host);
-        onConnectError(wsfcSocket, userErrorCallback);
-        // load new file
-        const newFile = fs.readFileSync(pathChanged)
-        // make a request for create backup
-        const req = JSON.stringify({
-          action: Action.ADD_FILE,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
-          file: newFile.toString('base64')
-        });
-        wsfcSocket.write(req);
-
-        // common hanlders for current socket data
-        
+        onConnectError(wsfcSocket, userErrorCallback)
+        // load file to sync
+        const fileClient = fs.readFileSync(pathChanged);
+        // create rollings
         // contains the bytes that was changed
         var buffersChanged: any = null;
+
+        // make a request for start to compare bytes
+        const req = JSON.stringify({
+          action: Action.COMPARE_ROLLINGS,
+          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'), // path of file to sync server
+          fileSize: fileClient.length, // size of client file
+        });
+
+        // make first request to server
+        wsfcSocket.write(req);
+
+        // listen response from server and make new requests
         syncCommonHandlers(
           wsfcSocket,
           wSFCClientSocketInstance,
