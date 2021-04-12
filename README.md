@@ -89,14 +89,13 @@ return a nodejs FSWatcher instance
 
 #### Event types
 
-| Type            | Description                       |
-|-----------------|-----------------------------------|
-| **ADD_DIR**     | Runs when a directory is added.   |
-| **ADD_FILE**    | It runs when they add a new file. |
-| **REMOVE_DIR**  | Runs when a directory is deleted. |
-| **REMOVE_FILE** | Runs when a file is deleted.      |
-| **CHANGE**      | Runs when a file changes.         |
-|                 |                                   |
+| Type            | Description                                      |
+|-----------------|--------------------------------------------------|
+| **ADD_DIR**     | Runs when a directory is added.                  |
+| **SYNC**        | It runs when they add a new file or file change. |
+| **REMOVE_DIR**  | Runs when a directory is deleted.                |
+| **REMOVE_FILE** | Runs when a file is deleted.                     |
+|                 |                                                  |
 
 #### Close function
 
