@@ -53,6 +53,7 @@ export const syncFile = async (arrayChanges: any, path: any, fileClientSize: num
         const bufferCifrado = await encryptBuffer(Buffer.from(tmpBuffer), key, iv);
         fs.writeSync(fd, bufferCifrado , 0, bufferCifrado.length, null);
         logger.info(`Sync file: ${path}`);
+        fs.closeSync(fd)
     });
 }
 
