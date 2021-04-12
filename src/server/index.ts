@@ -36,7 +36,7 @@ export const createServer = (
     // receive data from client
     socket.on("data", async function (data) {
       try {
-        const req = JSON.parse(data.toString());
+        const req = JSON.parse(data.toString('utf-8'));
 
         // Copare rolling client  file with rolling server file
         if (req.action == Action.COMPARE_ROLLINGS) {
@@ -118,7 +118,7 @@ export const createServer = (
               aesKey,
               iv
             );
-            logger.info(`Sync file: ${req.path}`);
+            
             socket.write(JSON.stringify(res));
           }
         }

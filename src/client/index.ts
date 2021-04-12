@@ -93,7 +93,7 @@ const syncCommonHandlers = (
 ) => {
 
   wsfcSocket.on("data", async function (data: any) {
-    const res = JSON.parse(data.toString());
+    const res = JSON.parse(data.toString('utf-8'));
     
 
     // If server detcting changes, prepare the syncronization

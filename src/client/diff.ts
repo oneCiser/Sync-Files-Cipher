@@ -21,7 +21,7 @@ export const getChanges = (rollignsChangedVector: Array<Rolling>, buffer: Buffer
         let subBuffer = buffer.slice(start, end);
         bufferChanges.push({
             start: rollignsChangedVector[i].start,
-            buffer64: subBuffer
+            buffer64: subBuffer.toString('base64')
         })
     }
 

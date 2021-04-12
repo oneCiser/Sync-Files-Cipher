@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { encryptBuffer } from '../utils/encrypt';
 import { decryptFile } from '../utils/encrypt';
-
+import { logger } from "../utils/logger";
 
 /**
  * Sync file server with file from client
@@ -12,10 +12,10 @@ import { decryptFile } from '../utils/encrypt';
  */
 export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number, key: string, iv: string, chunkSize: number = 3072) => {
     let backUpBuffer = null;
+    
     if(fs.existsSync(path)){
         backUpBuffer = await decryptFile(path, key, iv);
     }
-     
     
     let tmpBuffer: any = []
     //la cantidad de sub buffers del backup
@@ -34,7 +34,7 @@ export const syncFile = async (arrayChanges: any, path: any, fileClientSize: num
         }
         
         if(arrayChanges[start]){
-            let subBuffer: any = arrayChanges[start];
+            let subBuffer: any = Buffer.from(arrayChanges[start],'base64');
             tmpBuffer = [...tmpBuffer, ...subBuffer]
         }
         else if(backUpBuffer){
@@ -49,8 +49,10 @@ export const syncFile = async (arrayChanges: any, path: any, fileClientSize: num
         if (err) {
             throw 'could not open file: ' + err;
         }
+        
         const bufferCifrado = await encryptBuffer(Buffer.from(tmpBuffer), key, iv);
         fs.writeSync(fd, bufferCifrado , 0, bufferCifrado.length, null);
+        logger.info(`Sync file: ${path}`);
     });
 }
 
