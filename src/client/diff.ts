@@ -39,7 +39,7 @@ export const getChanges = (rollignsChangedVector: Array<Rolling>, buffer: Buffer
        start: buffer64
     }
  */
-export const getAllChunks = (buffer: Buffer, chunkSize: number = 3072): any => {
+export const getAllChunks = (buffer: Buffer, chunkSize: number = 8192): any => {
 
     let bufferChanges: any = []
     for (let i = 0; i < Math.ceil(buffer.length / chunkSize); i++) {

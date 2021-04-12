@@ -6,10 +6,10 @@ import fs from 'fs'
 /**
  * Create an arrasy of hash for each chunk of buffer
  * @param {Buffer} buffer The buffer to create rolling hashes 
- * @param {number} [chunkSize=3072]  The size of chunk, default 3072 bytes
+ * @param {number} [chunkSize=8192]  The size of chunk, default 3072 bytes
  * @return {Array} Array of hashes from each chunk
  */
-export const createRollingHashs = async (buffer: any, chunkSize: number = 3072) => {
+export const createRollingHashs = async (buffer: any, chunkSize: number = 8192) => {
     var hashes = []
     for (let i = 0; i < Math.ceil(buffer.length/chunkSize); i++) {
         var start = i*chunkSize;
@@ -36,10 +36,10 @@ export const getRollingHashes = async (path: any) => {
  * Compare rollings of file client and file server
  * @param {Array} clientRolling Array of hashes from file client
  * @param {Array} serverRolling Array of hashes from file server
- * @param {number} [chunkSize=3072] The size of chunk,  default 3072 bytes
+ * @param {number} [chunkSize=8192] The size of chunk,  default 3072 bytes
  * @return {Array}  Array of object of hashes differents with your range of byte
  */
-export const compareRolling = (clientRolling: Array<String>, serverRolling: Array<String>, chunkSize: number = 3072): Array<Rolling> => {
+export const compareRolling = (clientRolling: Array<String>, serverRolling: Array<String>, chunkSize: number = 8192): Array<Rolling> => {
     let match = [];
     for (let i = 0; i < clientRolling.length; i++) {
         if(!serverRolling[i] || clientRolling[i] != serverRolling[i]){

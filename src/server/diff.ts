@@ -8,9 +8,9 @@ import { logger } from "../utils/logger";
  * @param {Array<String>} arrayChanges The map of buffers changed: { start: buffer64 }
  * @param { Buffer } backUpBuffer The buffer of server file
  * @param { String } path The path of file to sync
- * @param { number } [chunkSize = 3072] The size of chunks, default 3072
+ * @param { number } [chunkSize = 8192] The size of chunks, default 3072
  */
-export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number, key: string, iv: string, chunkSize: number = 3072) => {
+export const syncFile = async (arrayChanges: any, path: any, fileClientSize: number, key: string, iv: string, chunkSize: number = 8192) => {
     let backUpBuffer = null;
     
     if(fs.existsSync(path)){

@@ -18,7 +18,7 @@ import { logger } from '../utils/logger'
  * @return {string} The path joined
  */
 const joinPath = (serverPrefix: string, clientPath: string): string => {
-  return path.join(serverPrefix, clientPath)
+  return path.join(serverPrefix, clientPath).replace(/\\/g, '/')
 }
 /**
  * Listen the connection error's socket
@@ -134,7 +134,7 @@ const syncCommonHandlers = (
         start: buffersChanged[res.index].start,
         buffer64: buffersChanged[res.index].buffer64,
         index: res.index,
-        path: joinPath(pathPrefix, folderToSync ).replace(/\\/g, '/'),
+        path: joinPath(pathPrefix, folderToSync ),
       };
 
       wsfcSocket.write(JSON.stringify(req));
@@ -207,7 +207,7 @@ export const sync = async (
         const req = JSON.stringify({
           rollingHashes, // hashes from client file
           action: Action.COMPARE_ROLLINGS,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'), // path of file to sync server
+          path: joinPath(pathPrefix, folderToSync), // path of file to sync server
           fileSize: fileClient.length, // size of client file
         });
 
@@ -237,7 +237,7 @@ export const sync = async (
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_FILE,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
+          path: joinPath(pathPrefix, folderToSync),
         });
         wsfcSocket.write(req);
 
@@ -257,7 +257,7 @@ export const sync = async (
         // make a request for remove backup
         const req = JSON.stringify({
           action: Action.REMOVE_DIR,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
+          path: joinPath(pathPrefix, folderToSync),
         });
         wsfcSocket.write(req);
 
@@ -279,7 +279,7 @@ export const sync = async (
         // make a request for create dir backup
         const req = JSON.stringify({
           action: Action.ADD_DIR,
-          path: joinPath(pathPrefix, folderToSync).replace(/\\/g, '/'),
+          path: joinPath(pathPrefix, folderToSync),
         });
         wsfcSocket.write(req);
 
